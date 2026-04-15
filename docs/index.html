@@ -64,6 +64,7 @@ tr:hover td{background:#fafaf8}
 .toast.ok{background:#27500A}
 .toast.fail{background:#791F1F}
 </style>
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 </head>
 <body>
 
@@ -278,8 +279,9 @@ function carregarDados(){
 
 function renderHead(){
   var h='<tr>';
+  h+='<th style="width:80px">Ação</th>';
   cols.forEach(function(c){h+='<th>'+esc(c)+'</th>';});
-  h+='<th style="width:90px">Ação</th></tr>';
+  h+='</tr>';
   document.getElementById('th').innerHTML=h;
 }
 
@@ -298,12 +300,13 @@ function renderRows(rows){
   rows.forEach(function(r){
     var oid=r.OBJECTID||r.objectid||'';
     h+='<tr>';
+    h+='<td><button class="btn-dl" onclick="baixar('+oid+',this)">Baixar</button></td>';
     cols.forEach(function(c){
       var v=r[c]; if(v==null)v='';
       if(typeof v==='number'&&v>1e12){try{v=new Date(v).toLocaleDateString('pt-BR');}catch(e){}}
       h+='<td title="'+esc(String(v))+'">'+esc(String(v))+'</td>';
     });
-    h+='<td><button class="btn-dl" onclick="baixar('+oid+',this)">Baixar</button></td></tr>';
+    h+='</tr>';
   });
   document.getElementById('tb').innerHTML=h;
 }
@@ -363,10 +366,11 @@ async function gerarDocx(dados,anx,oid){
   for(var i=0;i<anx.length;i++){
     try{var r=await fetch(FEATURE_URL+'/'+oid+'/attachments/'+anx[i].id+'?token='+TOKEN);fotos.push({nome:anx[i].name,buf:await r.arrayBuffer()});}catch(e){}
   }
-  var JSZip=(await import('https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js')).default;
+  if(typeof JSZip==='undefined') throw new Error('JSZip não carregou, recarregue a página.');
+  var JSZipLib=JSZip;
   var mr=await fetch('FICHA_DE_CADASTRO.docx');
   if(!mr.ok)throw new Error('Modelo FICHA_DE_CADASTRO.docx não encontrado');
-  var zip=await JSZip.loadAsync(await mr.arrayBuffer());
+  var zip=await JSZipLib.loadAsync(await mr.arrayBuffer());
   var doc=await zip.file('word/document.xml').async('string');
   doc=sx(doc,dados);
   if(fotos.length){
