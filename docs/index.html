@@ -357,8 +357,19 @@ function pt(txt,dados){
   return txt;
 }
 function sx(xml,dados){
-  return xml.replace(/(<w:t[^>]*>)([\s\S]*?)(<\/w:t>)/g,function(_,o,c,cl){
-    return c.includes('$')?o+pt(c,dados)+cl:_;
+  // 1. Une runs adjacentes para remontar marcadores fragmentados pelo Word
+  // Remove quebras entre </w:t></w:r><w:r><w:rPr>...</w:rPr><w:t> 
+  // e entre </w:t></w:r><w:r><w:t> (runs sem rPr)
+  var unido = xml;
+  // Itera até não haver mais fragmentações
+  for(var iter=0;iter<5;iter++){
+    // Une runs com mesmo estilo: </w:t></w:r><w:r><w:rPr>MESMO</w:rPr><w:t
+    unido = unido.replace(/<\/w:t>(<\/w:r><w:r>(?:<w:rPr>[\s\S]*?<\/w:rPr>)?)<w:t[^>]*>/g, '');
+  }
+  // 2. Agora substitui os marcadores dentro de <w:t>
+  return unido.replace(/(<w:t[^>]*>)([\s\S]*?)(<\/w:t>)/g,function(_,o,c,cl){
+    if(!c.includes('$') && !c.includes('☑') && !c.includes('☐')) return _;
+    return o+pt(c,dados)+cl;
   });
 }
 async function gerarDocx(dados,anx,oid){
