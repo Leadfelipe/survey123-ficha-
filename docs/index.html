@@ -171,7 +171,7 @@ function doLogin(){
   fetch('https://www.arcgis.com/sharing/rest/generateToken',{
     method:'POST',
     headers:{'Content-Type':'application/x-www-form-urlencoded'},
-    body:new URLSearchParams({username:u,password:p,referer:'https://www.arcgis.com',f:'json'})
+    body:new URLSearchParams({username:u,password:p,referer:location.origin,expiration:'120',f:'json'})
   })
   .then(r=>r.json())
   .then(res=>{
