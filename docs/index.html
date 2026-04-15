@@ -9,15 +9,21 @@
 body{font-family:system-ui,sans-serif;font-size:14px;background:#f5f5f3;color:#1a1a18;min-height:100vh}
 :root{--blue:#185FA5;--blue-bg:#E6F1FB;--green:#3B6D11;--green-bg:#EAF3DE;--red:#A32D2D;--red-bg:#FCEBEB;--border:#d3d1c7;--radius:8px}
 #login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:2rem}
-.login-card{background:#fff;border:0.5px solid var(--border);border-radius:12px;padding:2.5rem 2rem;width:100%;max-width:400px}
+.card{background:#fff;border:0.5px solid var(--border);border-radius:12px;padding:2.5rem 2rem;width:100%;max-width:440px}
 .logo{display:flex;align-items:center;gap:10px;margin-bottom:1.5rem}
 .logo span{font-size:17px;font-weight:500}
 h2{font-size:15px;font-weight:500;margin-bottom:6px;color:#444}
 .sub{font-size:13px;color:#888;margin-bottom:1.5rem;line-height:1.5}
 label{display:block;font-size:12px;color:#888;margin-bottom:4px;margin-top:14px}
-input{width:100%;padding:9px 10px;border:0.5px solid var(--border);border-radius:var(--radius);font-size:14px;outline:none;background:#fff;color:#1a1a18}
-input:focus{border-color:var(--blue);box-shadow:0 0 0 3px #E6F1FB}
+input,textarea{width:100%;padding:9px 10px;border:0.5px solid var(--border);border-radius:var(--radius);font-size:13px;outline:none;background:#fff;color:#1a1a18;font-family:inherit}
+textarea{resize:vertical;min-height:70px;font-size:12px;font-family:monospace}
+input:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px #E6F1FB}
 .hint{font-size:11px;color:#aaa;margin-top:4px;line-height:1.4}
+.tabs{display:flex;gap:0;border:0.5px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:0}
+.tab{flex:1;padding:8px;font-size:13px;text-align:center;cursor:pointer;border:none;background:#f9f9f7;color:#888;font-family:inherit}
+.tab.active{background:#fff;color:var(--blue);font-weight:500}
+.tab-content{display:none}
+.tab-content.active{display:block}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 16px;border-radius:var(--radius);border:none;font-size:14px;cursor:pointer;font-family:inherit;width:100%;margin-top:18px;font-weight:500}
 .btn-primary{background:var(--blue);color:#fff}
 .btn-primary:hover{background:#0C447C}
@@ -28,12 +34,14 @@ input:focus{border-color:var(--blue);box-shadow:0 0 0 3px #E6F1FB}
 .btn-dl:hover{background:#C0DD97}
 .btn-dl:disabled{opacity:.5;cursor:not-allowed}
 .err{font-size:12px;color:var(--red);background:var(--red-bg);padding:8px 10px;border-radius:6px;margin-top:12px;display:none}
+.info-box{font-size:12px;color:#0C447C;background:#E6F1FB;padding:10px 12px;border-radius:6px;margin-top:12px;line-height:1.6;border:0.5px solid #B5D4F4}
 .spinner{width:15px;height:15px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 #app-screen{display:none;min-height:100vh;flex-direction:column}
 .topbar{background:#fff;border-bottom:0.5px solid var(--border);padding:.75rem 1.5rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10}
 .topbar h1{font-size:15px;font-weight:500}
 .tag{font-size:12px;color:#888;background:#f5f5f3;padding:3px 9px;border-radius:20px;border:0.5px solid var(--border)}
+.tag-exp{font-size:11px;color:#A32D2D;background:#FCEBEB;padding:3px 9px;border-radius:20px;border:0.5px solid #F09595;display:none}
 main{padding:1.5rem;max-width:1200px;margin:0 auto;width:100%}
 .toolbar{display:flex;gap:10px;margin-bottom:1rem;flex-wrap:wrap;align-items:center}
 .sw{position:relative;flex:1;min-width:200px}
@@ -60,7 +68,7 @@ tr:hover td{background:#fafaf8}
 <body>
 
 <div id="login-screen">
-  <div class="login-card">
+  <div class="card">
     <div class="logo">
       <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
         <rect width="28" height="28" rx="6" fill="#185FA5"/>
@@ -69,22 +77,39 @@ tr:hover td{background:#fafaf8}
       </svg>
       <span>Ficha de Cadastro</span>
     </div>
-    <h2>Entrar com ArcGIS Online</h2>
-    <p class="sub">Credenciais usadas apenas para gerar um token temporário direto na API do ArcGIS.</p>
+    <h2>Acessar dados do Survey123</h2>
 
-    <label>Portal ArcGIS (URL da sua organização)</label>
-    <input type="url" id="inp-portal" value="https://leadgf.maps.arcgis.com">
-    <div class="hint">Ex: https://suaorg.maps.arcgis.com — ou deixe https://www.arcgis.com para conta pessoal</div>
+    <div class="tabs" style="margin-top:12px">
+      <button class="tab active" onclick="setTab('token')">Colar Token</button>
+      <button class="tab" onclick="setTab('senha')">Usuário e Senha</button>
+    </div>
 
-    <label>Usuário</label>
-    <input type="text" id="inp-user" placeholder="felipe.oliveira" autocomplete="username">
+    <!-- ABA TOKEN -->
+    <div id="tab-token" class="tab-content active">
+      <div class="info-box">
+        Como obter o token:<br>
+        1. Abra o Survey123 no navegador (já logado)<br>
+        2. Pressione <strong>F12</strong> → aba <strong>Network</strong><br>
+        3. Recarregue (<strong>F5</strong>), filtre por <strong>query</strong><br>
+        4. Clique numa requisição → <strong>Payload</strong> → copie o valor de <strong>token</strong>
+      </div>
+      <label>Token ArcGIS</label>
+      <textarea id="inp-token" placeholder="Cole aqui o token copiado do F12…" rows="3"></textarea>
+      <label>URL do Feature Layer</label>
+      <input type="url" id="inp-url-token" value="https://services3.arcgis.com/ba17q0p2zHwzRK3B/arcgis/rest/services/survey123_011b2663466f4ee089154d0215e7667e_results/FeatureServer/0">
+    </div>
 
-    <label>Senha</label>
-    <input type="password" id="inp-pass" placeholder="••••••••" autocomplete="current-password">
-
-    <label>URL do Feature Layer</label>
-    <input type="url" id="inp-url" placeholder="https://services3.arcgis.com/…/FeatureServer/0">
-    <div class="hint">Termina em /FeatureServer/0</div>
+    <!-- ABA SENHA -->
+    <div id="tab-senha" class="tab-content">
+      <label>Portal ArcGIS</label>
+      <input type="url" id="inp-portal" value="https://leadgf.maps.arcgis.com">
+      <label>Usuário</label>
+      <input type="text" id="inp-user" placeholder="felipe.oliveira" autocomplete="username">
+      <label>Senha</label>
+      <input type="password" id="inp-pass" placeholder="••••••••" autocomplete="current-password">
+      <label>URL do Feature Layer</label>
+      <input type="url" id="inp-url-senha" value="https://services3.arcgis.com/ba17q0p2zHwzRK3B/arcgis/rest/services/survey123_011b2663466f4ee089154d0215e7667e_results/FeatureServer/0">
+    </div>
 
     <button class="btn btn-primary" id="btn-login" onclick="doLogin()">
       <span id="btn-ico"></span>
@@ -104,7 +129,8 @@ tr:hover td{background:#fafaf8}
       </svg>
       <h1>Ficha de Cadastro</h1>
     </div>
-    <div style="display:flex;align-items:center;gap:10px">
+    <div style="display:flex;align-items:center;gap:8px">
+      <span class="tag-exp" id="lbl-exp">Token expirando</span>
       <span class="tag" id="lbl-user"></span>
       <button class="btn-sm" onclick="doLogout()">Sair</button>
     </div>
@@ -131,73 +157,102 @@ tr:hover td{background:#fafaf8}
 <div class="toasts" id="toasts"></div>
 
 <script>
-var TOKEN='', FEATURE_URL='', PORTAL='';
+var TOKEN='', FEATURE_URL='';
 var todos=[], cols=[];
 var PRIO=['OBJECTID','codigo','nome','nome_imovel','municipios','empre','datas','vistoriador'];
+var tabAtual='token';
+
+function setTab(t){
+  tabAtual=t;
+  document.querySelectorAll('.tab').forEach(function(el,i){el.classList.toggle('active',['token','senha'][i]===t);});
+  document.getElementById('tab-token').classList.toggle('active',t==='token');
+  document.getElementById('tab-senha').classList.toggle('active',t==='senha');
+}
 
 function setLoading(on){
-  var btn=document.getElementById('btn-login');
-  var ico=document.getElementById('btn-ico');
-  var txt=document.getElementById('btn-txt');
-  btn.disabled=on;
-  ico.innerHTML=on?'<div class="spinner"></div>':'';
-  txt.textContent=on?'Entrando…':'Entrar';
+  document.getElementById('btn-login').disabled=on;
+  document.getElementById('btn-ico').innerHTML=on?'<div class="spinner"></div>':'';
+  document.getElementById('btn-txt').textContent=on?'Entrando…':'Entrar';
+}
+
+function showErr(msg){
+  var el=document.getElementById('err');
+  el.textContent=msg; el.style.display='block';
 }
 
 function doLogin(){
+  document.getElementById('err').style.display='none';
+  if(tabAtual==='token') loginComToken();
+  else loginComSenha();
+}
+
+function loginComToken(){
+  var token=document.getElementById('inp-token').value.trim();
+  var url=document.getElementById('inp-url-token').value.trim().replace(/\/+$/,'');
+  if(!token){showErr('Cole o token no campo acima.');return;}
+  if(!url){showErr('Informe a URL do Feature Layer.');return;}
+  setLoading(true);
+  // Valida o token fazendo uma chamada simples
+  fetch('https://www.arcgis.com/sharing/rest/community/self?f=json&token='+encodeURIComponent(token))
+  .then(function(r){return r.json();})
+  .then(function(res){
+    if(res.error) throw new Error('Token inválido ou expirado.');
+    TOKEN=token; FEATURE_URL=url;
+    document.getElementById('lbl-user').textContent=res.fullName||res.username||'Usuário';
+    entrar();
+  })
+  .catch(function(e){
+    // Token pode ser válido mesmo sem validar no /community/self — tenta direto
+    TOKEN=token; FEATURE_URL=url;
+    document.getElementById('lbl-user').textContent='Usuário';
+    entrar();
+  })
+  .finally(function(){setLoading(false);});
+}
+
+function loginComSenha(){
   var portal=document.getElementById('inp-portal').value.trim().replace(/\/+$/,'');
   var user=document.getElementById('inp-user').value.trim();
   var pass=document.getElementById('inp-pass').value;
-  var url=document.getElementById('inp-url').value.trim().replace(/\/+$/,'');
-  var err=document.getElementById('err');
-  err.style.display='none';
-  if(!user||!pass||!url){err.textContent='Preencha usuário, senha e URL.';err.style.display='block';return;}
+  var url=document.getElementById('inp-url-senha').value.trim().replace(/\/+$/,'');
+  if(!user||!pass||!url){showErr('Preencha todos os campos.');return;}
   if(!portal) portal='https://www.arcgis.com';
-  PORTAL=portal; FEATURE_URL=url;
+  FEATURE_URL=url;
   setLoading(true);
-
-  // Tenta primeiro pelo portal da organização, depois pelo www.arcgis.com
-  tentarToken(portal+'/sharing/rest/generateToken', user, pass)
-    .catch(function(){
-      return tentarToken('https://www.arcgis.com/sharing/rest/generateToken', user, pass);
-    })
-    .then(function(token){
-      TOKEN=token;
-      document.getElementById('lbl-user').textContent=user;
-      document.getElementById('login-screen').style.display='none';
-      document.getElementById('app-screen').style.display='flex';
-      carregarDados();
-    })
-    .catch(function(e){
-      err.textContent=e.message||'Usuário ou senha inválidos.';
-      err.style.display='block';
-    })
-    .finally(function(){ setLoading(false); });
+  tentarToken(portal+'/sharing/rest/generateToken',user,pass)
+  .catch(function(){return tentarToken('https://www.arcgis.com/sharing/rest/generateToken',user,pass);})
+  .then(function(token){
+    TOKEN=token;
+    document.getElementById('lbl-user').textContent=user;
+    entrar();
+  })
+  .catch(function(e){showErr(e.message||'Falha na autenticação.');})
+  .finally(function(){setLoading(false);});
 }
 
-function tentarToken(endpoint, user, pass){
+function tentarToken(endpoint,user,pass){
   return fetch(endpoint,{
     method:'POST',
     headers:{'Content-Type':'application/x-www-form-urlencoded'},
-    body:new URLSearchParams({
-      username:user, password:pass,
-      referer: location.origin||'https://leadfelipe.github.io',
-      expiration:'120', f:'json'
-    })
-  })
-  .then(function(r){return r.json();})
-  .then(function(res){
+    body:new URLSearchParams({username:user,password:pass,referer:location.origin,expiration:'120',f:'json'})
+  }).then(function(r){return r.json();}).then(function(res){
     if(res.error||!res.token) throw new Error(res.error&&res.error.message?res.error.message:'Falha na autenticação');
     return res.token;
   });
 }
 
+function entrar(){
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('app-screen').style.display='flex';
+  carregarDados();
+}
+
 function doLogout(){
-  TOKEN='';FEATURE_URL='';todos=[];
+  TOKEN=''; FEATURE_URL=''; todos=[];
   document.getElementById('app-screen').style.display='none';
   document.getElementById('login-screen').style.display='flex';
-  document.getElementById('inp-pass').value='';
   document.getElementById('inp-search').value='';
+  document.getElementById('inp-token').value='';
 }
 
 function carregarDados(){
@@ -213,17 +268,17 @@ function carregarDados(){
     var r=all.filter(function(c){return!PRIO.includes(c)&&!c.startsWith('Shape')&&c!=='GlobalID';});
     cols=p.concat(r).slice(0,12);
     renderHead(); filtrar();
-    document.getElementById('lbl-status').textContent='Atualizado: '+new Date().toLocaleTimeString('pt-BR');
+    document.getElementById('lbl-status').textContent='Atualizado: '+new Date().toLocaleTimeString('pt-BR')+' — '+todos.length+' registros carregados';
   })
   .catch(function(e){
-    document.getElementById('tb').innerHTML='<tr><td colspan="20" class="empty">Erro: '+e.message+'</td></tr>';
+    document.getElementById('tb').innerHTML='<tr><td colspan="20" class="empty">Erro: '+esc(e.message)+'</td></tr>';
     toast(e.message,'fail');
   });
 }
 
 function renderHead(){
   var h='<tr>';
-  cols.forEach(function(c){h+='<th>'+c+'</th>';});
+  cols.forEach(function(c){h+='<th>'+esc(c)+'</th>';});
   h+='<th style="width:90px">Ação</th></tr>';
   document.getElementById('th').innerHTML=h;
 }
@@ -246,14 +301,14 @@ function renderRows(rows){
     cols.forEach(function(c){
       var v=r[c]; if(v==null)v='';
       if(typeof v==='number'&&v>1e12){try{v=new Date(v).toLocaleDateString('pt-BR');}catch(e){}}
-      h+='<td title="'+String(v).replace(/"/g,'')+'">'+esc(String(v))+'</td>';
+      h+='<td title="'+esc(String(v))+'">'+esc(String(v))+'</td>';
     });
     h+='<td><button class="btn-dl" onclick="baixar('+oid+',this)">Baixar</button></td></tr>';
   });
   document.getElementById('tb').innerHTML=h;
 }
 
-function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
 function baixar(oid,btn){
   if(!oid){toast('OBJECTID não encontrado','fail');return;}
