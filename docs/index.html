@@ -338,40 +338,94 @@ function baixar(oid,btn){
 }
 
 function fv(v){
-  if(v==null)return'';
-  if(typeof v==='number'&&v>1e12){try{var d=new Date(v);return('0'+d.getDate()).slice(-2)+'/'+(('0'+(d.getMonth()+1)).slice(-2))+'/'+d.getFullYear();}catch(e){return String(v);}}
+  if (v == null) return '';
+
+  if (typeof v === 'number' && v > 1000000000000) {
+    try {
+      var d = new Date(v);
+      if (!isNaN(d.getTime())) {
+        return ('0' + d.getDate()).slice(-2) + '/' +
+               ('0' + (d.getMonth() + 1)).slice(-2) + '/' +
+               d.getFullYear();
+      }
+    } catch(e) {}
+  }
+
   return String(v);
 }
-function fc(dados,campo,opcao){
-  return String(dados[campo]||'').split(/[,;]/).map(function(s){return s.trim();}).includes(opcao.trim())?'☑':'☐';
+
+function norm(s){
+  return String(s || '')
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase();
 }
-function pt(txt,dados){
-  txt=txt.replace(/\$\{(\w+)\s*[│|]\s*checked:"([^"]+)"\}/g,function(_,c,o){return fc(dados,c,o);});
-  txt=txt.replace(/\$\{(\w+)\s*[│|]\s*format:"([^"]+)"\}/g,function(_,c){return fv(dados[c]);});
-  txt=txt.replace(/\$\{if\s+(\w+)\s*[│|]\s*selected:"([^"]+)"\}([\s\S]*?)\$\{\/\}/g,function(_,c,o,inner){
-    return String(dados[c]||'').toLowerCase()===o.toLowerCase()?pt(inner,dados):'';
+
+function fc(dados, campo, opcao){
+  var bruto = dados[campo];
+  if (bruto == null) return '☐';
+
+  var valores = String(bruto)
+    .split(/[,;]/)
+    .map(function(s){ return norm(s); })
+    .filter(Boolean);
+
+  return valores.includes(norm(opcao)) ? '☑' : '☐';
+}
+
+function pt(txt, dados){
+  txt = txt.replace(/\$\{(\w+)\s*[│|]\s*checked\s*:\s*"([^"]+)"\s*\}/g, function(_, c, o){
+    return fc(dados, c, o);
   });
-  txt=txt.replace(/\$\{\$file[^}]*\}/g,'[FOTO]');
-  txt=txt.replace(/\$\{(\w+)\}/g,function(_,c){return fv(dados[c]);});
-  txt=txt.replace(/\$\{[^}]*\}/g,'');
+
+  txt = txt.replace(/\$\{(\w+)\s*[│|]\s*format\s*:\s*"([^"]+)"\s*\}/g, function(_, c){
+    return fv(dados[c]);
+  });
+
+  txt = txt.replace(/\$\{if\s+(\w+)\s*[│|]\s*selected\s*:\s*"([^"]+)"\s*\}([\s\S]*?)\$\{\/\}/g, function(_, c, o, inner){
+    return norm(dados[c]) === norm(o) ? pt(inner, dados) : '';
+  });
+
+  txt = txt.replace(/\$\{\$file[^}]*\}/g, '[FOTO]');
+
+  txt = txt.replace(/\$\{(\w+)\}/g, function(_, c){
+    return fv(dados[c]);
+  });
+
+  txt = txt.replace(/\$\{[^}]*\}/g, '');
   return txt;
 }
-function sx(xml,dados){
-  // 1. Une runs adjacentes para remontar marcadores fragmentados pelo Word
-  // Remove quebras entre </w:t></w:r><w:r><w:rPr>...</w:rPr><w:t> 
-  // e entre </w:t></w:r><w:r><w:t> (runs sem rPr)
+
+function sx(xml, dados){
   var unido = xml;
-  // Itera até não haver mais fragmentações
-  for(var iter=0;iter<5;iter++){
-    // Une runs com mesmo estilo: </w:t></w:r><w:r><w:rPr>MESMO</w:rPr><w:t
-    unido = unido.replace(/<\/w:t>(<\/w:r><w:r>(?:<w:rPr>[\s\S]*?<\/w:rPr>)?)<w:t[^>]*>/g, '');
+
+  for (var iter = 0; iter < 10; iter++) {
+    var antes = unido;
+
+    unido = unido.replace(
+      /<\/w:t>\s*<\/w:r>\s*<w:r>(?:<w:rPr>[\s\S]*?<\/w:rPr>)?\s*<w:t[^>]*>/g,
+      ''
+    );
+
+    if (unido === antes) break;
   }
-  // 2. Agora substitui os marcadores dentro de <w:t>
-  return unido.replace(/(<w:t[^>]*>)([\s\S]*?)(<\/w:t>)/g,function(_,o,c,cl){
-    if(!c.includes('$') && !c.includes('☑') && !c.includes('☐')) return _;
-    return o+pt(c,dados)+cl;
+
+  return unido.replace(/(<w:t[^>]*>)([\s\S]*?)(<\/w:t>)/g, function(_, ab, conteudo, fe){
+    if (
+      conteudo.indexOf('${') === -1 &&
+      conteudo.indexOf('☑') === -1 &&
+      conteudo.indexOf('☐') === -1 &&
+      conteudo.indexOf('[FOTO]') === -1
+    ) {
+      return _;
+    }
+
+    return ab + pt(conteudo, dados) + fe;
   });
 }
+
 async function gerarDocx(dados,anx,oid){
   var fotos=[];
   for(var i=0;i<anx.length;i++){
