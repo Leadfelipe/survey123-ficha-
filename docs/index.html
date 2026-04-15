@@ -8,48 +8,50 @@
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:system-ui,sans-serif;font-size:14px;background:#f5f5f3;color:#1a1a18;min-height:100vh}
 :root{--blue:#185FA5;--blue-bg:#E6F1FB;--green:#3B6D11;--green-bg:#EAF3DE;--red:#A32D2D;--red-bg:#FCEBEB;--border:#d3d1c7;--radius:8px}
-
 #login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:2rem}
 .login-card{background:#fff;border:0.5px solid var(--border);border-radius:12px;padding:2.5rem 2rem;width:100%;max-width:400px}
-.login-logo{display:flex;align-items:center;gap:10px;margin-bottom:1.5rem}
-.login-logo span{font-size:17px;font-weight:500}
-.login-card h2{font-size:15px;font-weight:500;margin-bottom:8px;color:#444}
-.login-card p{font-size:13px;color:#888;margin-bottom:1.5rem;line-height:1.5}
-label{display:block;font-size:12px;color:#888;margin-bottom:4px;margin-top:12px}
-input[type=url]{width:100%;padding:8px 10px;border:0.5px solid var(--border);border-radius:var(--radius);font-size:14px;outline:none;background:#fff;color:#1a1a18}
-input:focus{border-color:var(--blue);box-shadow:0 0 0 2px #E6F1FB}
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 16px;border-radius:var(--radius);border:0.5px solid var(--border);background:#fff;color:#1a1a18;font-size:14px;cursor:pointer;font-family:inherit;width:100%;margin-top:16px}
-.btn:hover{background:#f5f5f3}
-.btn-esri{background:var(--blue);color:#fff;border-color:var(--blue);font-weight:500}
-.btn-esri:hover{background:#0C447C}
-.btn-sm{padding:5px 10px;font-size:12px;width:auto}
-.btn-dl{background:var(--green-bg);color:var(--green);border-color:#C0DD97}
+.logo{display:flex;align-items:center;gap:10px;margin-bottom:1.5rem}
+.logo span{font-size:17px;font-weight:500}
+h2{font-size:15px;font-weight:500;margin-bottom:6px;color:#444}
+.sub{font-size:13px;color:#888;margin-bottom:1.5rem;line-height:1.5}
+label{display:block;font-size:12px;color:#888;margin-bottom:4px;margin-top:14px}
+input{width:100%;padding:9px 10px;border:0.5px solid var(--border);border-radius:var(--radius);font-size:14px;outline:none;background:#fff;color:#1a1a18}
+input:focus{border-color:var(--blue);box-shadow:0 0 0 3px #E6F1FB}
+.hint{font-size:11px;color:#aaa;margin-top:4px;line-height:1.4}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 16px;border-radius:var(--radius);border:none;font-size:14px;cursor:pointer;font-family:inherit;width:100%;margin-top:18px;font-weight:500}
+.btn-primary{background:var(--blue);color:#fff}
+.btn-primary:hover{background:#0C447C}
+.btn-primary:disabled{background:#B5D4F4;cursor:not-allowed}
+.btn-sm{padding:5px 11px;font-size:12px;width:auto;border:0.5px solid var(--border);background:#fff;border-radius:var(--radius);cursor:pointer;font-family:inherit}
+.btn-sm:hover{background:#f5f5f3}
+.btn-dl{background:var(--green-bg);color:var(--green);border:0.5px solid #C0DD97;border-radius:var(--radius);padding:5px 11px;font-size:12px;cursor:pointer;font-family:inherit}
 .btn-dl:hover{background:#C0DD97}
-.err{font-size:12px;color:var(--red);background:var(--red-bg);padding:8px 10px;border-radius:6px;margin-top:10px;display:none}
-
+.btn-dl:disabled{opacity:.5;cursor:not-allowed}
+.err{font-size:12px;color:var(--red);background:var(--red-bg);padding:8px 10px;border-radius:6px;margin-top:12px;display:none}
+.spinner{width:15px;height:15px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
 #app-screen{display:none;min-height:100vh;flex-direction:column}
 .topbar{background:#fff;border-bottom:0.5px solid var(--border);padding:.75rem 1.5rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10}
 .topbar h1{font-size:15px;font-weight:500}
-.tag-user{font-size:12px;color:#888;background:#f5f5f3;padding:3px 8px;border-radius:20px;border:0.5px solid var(--border)}
+.tag{font-size:12px;color:#888;background:#f5f5f3;padding:3px 9px;border-radius:20px;border:0.5px solid var(--border)}
 main{padding:1.5rem;max-width:1200px;margin:0 auto;width:100%}
 .toolbar{display:flex;gap:10px;margin-bottom:1rem;flex-wrap:wrap;align-items:center}
-.search-wrap{position:relative;flex:1;min-width:200px}
-.search-wrap input{width:100%;padding:7px 10px 7px 30px;border:0.5px solid var(--border);border-radius:var(--radius);font-size:13px;outline:none;background:#fff}
-.search-wrap input:focus{border-color:var(--blue)}
-.search-icon{position:absolute;left:9px;top:50%;transform:translateY(-50%);color:#888}
-.count-badge{font-size:12px;color:#888;padding:4px 10px;background:#f5f5f3;border-radius:20px;border:0.5px solid var(--border);white-space:nowrap}
-.status{font-size:12px;color:#888;padding:4px 0 8px}
-.table-wrap{background:#fff;border:0.5px solid var(--border);border-radius:12px;overflow:hidden}
-.tbl-scroll{overflow-x:auto}
+.sw{position:relative;flex:1;min-width:200px}
+.sw input{padding-left:32px}
+.si{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:#888;pointer-events:none}
+.badge{font-size:12px;color:#888;padding:4px 10px;background:#f5f5f3;border-radius:20px;border:0.5px solid var(--border);white-space:nowrap}
+.status{font-size:12px;color:#aaa;padding:4px 0 8px}
+.tw{background:#fff;border:0.5px solid var(--border);border-radius:12px;overflow:hidden}
+.ts{overflow-x:auto}
 table{width:100%;border-collapse:collapse;font-size:13px}
 thead tr{background:#f9f9f7;border-bottom:0.5px solid var(--border)}
 th{padding:9px 12px;text-align:left;font-weight:500;font-size:12px;color:#666;white-space:nowrap}
-td{padding:9px 12px;border-bottom:0.5px solid #f0efe8;color:#1a1a18;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+td{padding:9px 12px;border-bottom:0.5px solid #f0efe8;color:#1a1a18;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 tr:last-child td{border-bottom:none}
 tr:hover td{background:#fafaf8}
-.empty{text-align:center;padding:3rem;color:#888}
-.toast-wrap{position:fixed;bottom:1.5rem;right:1.5rem;z-index:100;display:flex;flex-direction:column;gap:8px}
-.toast{background:#1a1a18;color:#fff;padding:10px 14px;border-radius:var(--radius);font-size:13px;opacity:0;transform:translateY(8px);transition:all .25s;pointer-events:none}
+.empty{text-align:center;padding:3rem;color:#888;font-size:13px}
+.toasts{position:fixed;bottom:1.5rem;right:1.5rem;z-index:100;display:flex;flex-direction:column;gap:8px}
+.toast{background:#1a1a18;color:#fff;padding:10px 14px;border-radius:var(--radius);font-size:13px;opacity:0;transform:translateY(8px);transition:all .25s}
 .toast.show{opacity:1;transform:translateY(0)}
 .toast.ok{background:#27500A}
 .toast.fail{background:#791F1F}
@@ -59,7 +61,7 @@ tr:hover td{background:#fafaf8}
 
 <div id="login-screen">
   <div class="login-card">
-    <div class="login-logo">
+    <div class="logo">
       <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
         <rect width="28" height="28" rx="6" fill="#185FA5"/>
         <path d="M14 6L20 10V18L14 22L8 18V10L14 6Z" fill="white" opacity=".9"/>
@@ -68,21 +70,27 @@ tr:hover td{background:#fafaf8}
       <span>Ficha de Cadastro</span>
     </div>
     <h2>Entrar com ArcGIS Online</h2>
-    <p>Será aberta a tela de login oficial do ArcGIS. Após entrar, você volta aqui automaticamente.</p>
+    <p class="sub">Credenciais usadas apenas para gerar um token temporário direto na API do ArcGIS.</p>
+
+    <label>Portal ArcGIS (URL da sua organização)</label>
+    <input type="url" id="inp-portal" value="https://leadgf.maps.arcgis.com">
+    <div class="hint">Ex: https://suaorg.maps.arcgis.com — ou deixe https://www.arcgis.com para conta pessoal</div>
+
+    <label>Usuário</label>
+    <input type="text" id="inp-user" placeholder="felipe.oliveira" autocomplete="username">
+
+    <label>Senha</label>
+    <input type="password" id="inp-pass" placeholder="••••••••" autocomplete="current-password">
 
     <label>URL do Feature Layer</label>
     <input type="url" id="inp-url" placeholder="https://services3.arcgis.com/…/FeatureServer/0">
-    <div style="font-size:11px;color:#aaa;margin-top:4px">Cole a URL do Feature Layer (termina em /FeatureServer/0)</div>
+    <div class="hint">Termina em /FeatureServer/0</div>
 
-    <button class="btn btn-esri" onclick="doOAuthLogin()">
-      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-        <rect x="1" y="1" width="14" height="14" rx="3" fill="white" opacity=".2"/>
-        <path d="M8 3L11 5.5V10.5L8 13L5 10.5V5.5L8 3Z" fill="white"/>
-      </svg>
-      Entrar com ArcGIS
+    <button class="btn btn-primary" id="btn-login" onclick="doLogin()">
+      <span id="btn-ico"></span>
+      <span id="btn-txt">Entrar</span>
     </button>
-    <div class="err" id="login-err"></div>
-    <p style="font-size:11px;color:#aaa;margin-top:16px;line-height:1.5">Login feito direto no ArcGIS — nenhuma senha é armazenada aqui.</p>
+    <div class="err" id="err"></div>
   </div>
 </div>
 
@@ -97,215 +105,173 @@ tr:hover td{background:#fafaf8}
       <h1>Ficha de Cadastro</h1>
     </div>
     <div style="display:flex;align-items:center;gap:10px">
-      <span class="tag-user" id="lbl-user"></span>
-      <button class="btn btn-sm" onclick="doLogout()">Sair</button>
+      <span class="tag" id="lbl-user"></span>
+      <button class="btn-sm" onclick="doLogout()">Sair</button>
     </div>
   </div>
   <main>
     <div class="toolbar">
-      <div class="search-wrap">
-        <svg class="search-icon" width="14" height="14" viewBox="0 0 16 16" fill="none">
+      <div class="sw">
+        <svg class="si" width="14" height="14" viewBox="0 0 16 16" fill="none">
           <circle cx="6.5" cy="6.5" r="5" stroke="#888" stroke-width="1.5"/>
           <path d="M10.5 10.5L14 14" stroke="#888" stroke-width="1.5" stroke-linecap="round"/>
         </svg>
         <input type="text" id="inp-search" placeholder="Buscar em qualquer campo…" oninput="filtrar()">
       </div>
-      <span class="count-badge" id="lbl-count">— registros</span>
-      <button class="btn btn-sm" onclick="carregarDados()">
-        <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M13 8A5 5 0 1 1 8 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M8 1v4l2-2M8 5L6 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-        Atualizar
-      </button>
+      <span class="badge" id="lbl-count">— registros</span>
+      <button class="btn-sm" onclick="carregarDados()">↺ Atualizar</button>
     </div>
     <div class="status" id="lbl-status"></div>
-    <div class="table-wrap">
-      <div class="tbl-scroll">
-        <table id="tbl">
-          <thead id="tbl-head"></thead>
-          <tbody id="tbl-body"></tbody>
-        </table>
-      </div>
-    </div>
+    <div class="tw"><div class="ts">
+      <table><thead id="th"></thead><tbody id="tb"></tbody></table>
+    </div></div>
   </main>
 </div>
 
-<div class="toast-wrap" id="toasts"></div>
+<div class="toasts" id="toasts"></div>
 
 <script>
-var TOKEN = '', FEATURE_URL = '', USUARIO = '';
-var todosRegistros = [], camposVisiveis = [];
-var COL_PRIO = ['OBJECTID','codigo','nome','nome_imovel','municipios','empre','datas','vistoriador'];
+var TOKEN='', FEATURE_URL='', PORTAL='';
+var todos=[], cols=[];
+var PRIO=['OBJECTID','codigo','nome','nome_imovel','municipios','empre','datas','vistoriador'];
 
-// ── OAuth2 via popup ──────────────────────────────────────────────────────────
-// App ID público da Esri para apps client-side (arcgisonline)
-var CLIENT_ID = 'arcgisonline';
-var PORTAL_URL = 'https://www.arcgis.com';
-
-function doOAuthLogin(){
-  var url = document.getElementById('inp-url').value.trim().replace(/\/+$/,'');
-  var err = document.getElementById('login-err');
-  err.style.display = 'none';
-  if(!url){ err.textContent='Cole a URL do Feature Layer.'; err.style.display='block'; return; }
-  FEATURE_URL = url;
-
-  // Salva URL para recuperar após o redirect
-  sessionStorage.setItem('feature_url', url);
-
-  // Abre popup de login OAuth ArcGIS
-  var redirectUri = encodeURIComponent(location.href.split('?')[0].split('#')[0]);
-  var authUrl = PORTAL_URL+'/sharing/rest/oauth2/authorize'
-    +'?client_id='+CLIENT_ID
-    +'&response_type=token'
-    +'&expiration=120'
-    +'&redirect_uri='+redirectUri;
-
-  var popup = window.open(authUrl, 'arcgis_login', 'width=600,height=600,left=300,top=100');
-
-  // Escuta mensagem do popup (quando usar redirect_uri com fragment)
-  var timer = setInterval(function(){
-    if(!popup || popup.closed){
-      clearInterval(timer);
-      return;
-    }
-    try{
-      var href = popup.location.href;
-      if(href && href.indexOf('access_token') > -1){
-        clearInterval(timer);
-        var hash = popup.location.hash.substring(1);
-        popup.close();
-        var params = {};
-        hash.split('&').forEach(function(p){
-          var kv = p.split('=');
-          params[decodeURIComponent(kv[0])] = decodeURIComponent(kv[1]||'');
-        });
-        if(params.access_token){
-          onTokenObtido(params.access_token);
-        } else {
-          showErr('Não foi possível obter o token. Tente novamente.');
-        }
-      }
-    } catch(e){ /* cross-origin ainda carregando */ }
-  }, 500);
+function setLoading(on){
+  var btn=document.getElementById('btn-login');
+  var ico=document.getElementById('btn-ico');
+  var txt=document.getElementById('btn-txt');
+  btn.disabled=on;
+  ico.innerHTML=on?'<div class="spinner"></div>':'';
+  txt.textContent=on?'Entrando…':'Entrar';
 }
 
-function onTokenObtido(token){
-  TOKEN = token;
-  // Busca nome do usuário
-  fetch(PORTAL_URL+'/sharing/rest/community/self?f=json&token='+token)
-    .then(function(r){ return r.json(); })
-    .then(function(res){
-      USUARIO = res.fullName || res.username || 'Usuário';
-      document.getElementById('lbl-user').textContent = USUARIO;
-      document.getElementById('login-screen').style.display = 'none';
-      document.getElementById('app-screen').style.display = 'flex';
+function doLogin(){
+  var portal=document.getElementById('inp-portal').value.trim().replace(/\/+$/,'');
+  var user=document.getElementById('inp-user').value.trim();
+  var pass=document.getElementById('inp-pass').value;
+  var url=document.getElementById('inp-url').value.trim().replace(/\/+$/,'');
+  var err=document.getElementById('err');
+  err.style.display='none';
+  if(!user||!pass||!url){err.textContent='Preencha usuário, senha e URL.';err.style.display='block';return;}
+  if(!portal) portal='https://www.arcgis.com';
+  PORTAL=portal; FEATURE_URL=url;
+  setLoading(true);
+
+  // Tenta primeiro pelo portal da organização, depois pelo www.arcgis.com
+  tentarToken(portal+'/sharing/rest/generateToken', user, pass)
+    .catch(function(){
+      return tentarToken('https://www.arcgis.com/sharing/rest/generateToken', user, pass);
+    })
+    .then(function(token){
+      TOKEN=token;
+      document.getElementById('lbl-user').textContent=user;
+      document.getElementById('login-screen').style.display='none';
+      document.getElementById('app-screen').style.display='flex';
       carregarDados();
     })
-    .catch(function(){
-      USUARIO = 'Usuário';
-      document.getElementById('lbl-user').textContent = USUARIO;
-      document.getElementById('login-screen').style.display = 'none';
-      document.getElementById('app-screen').style.display = 'flex';
-      carregarDados();
-    });
+    .catch(function(e){
+      err.textContent=e.message||'Usuário ou senha inválidos.';
+      err.style.display='block';
+    })
+    .finally(function(){ setLoading(false); });
 }
 
-function showErr(msg){
-  var el = document.getElementById('login-err');
-  el.textContent = msg;
-  el.style.display = 'block';
+function tentarToken(endpoint, user, pass){
+  return fetch(endpoint,{
+    method:'POST',
+    headers:{'Content-Type':'application/x-www-form-urlencoded'},
+    body:new URLSearchParams({
+      username:user, password:pass,
+      referer: location.origin||'https://leadfelipe.github.io',
+      expiration:'120', f:'json'
+    })
+  })
+  .then(function(r){return r.json();})
+  .then(function(res){
+    if(res.error||!res.token) throw new Error(res.error&&res.error.message?res.error.message:'Falha na autenticação');
+    return res.token;
+  });
 }
 
 function doLogout(){
-  TOKEN=''; FEATURE_URL=''; todosRegistros=[];
-  sessionStorage.clear();
+  TOKEN='';FEATURE_URL='';todos=[];
   document.getElementById('app-screen').style.display='none';
   document.getElementById('login-screen').style.display='flex';
+  document.getElementById('inp-pass').value='';
   document.getElementById('inp-search').value='';
 }
 
-// ── Dados ─────────────────────────────────────────────────────────────────────
 function carregarDados(){
-  var body = document.getElementById('tbl-body');
-  body.innerHTML='<tr><td colspan="20" style="text-align:center;padding:2rem;color:#888">Carregando dados…</td></tr>';
+  document.getElementById('tb').innerHTML='<tr><td colspan="20" class="empty">Carregando dados…</td></tr>';
   document.getElementById('lbl-count').textContent='Carregando…';
-  document.getElementById('lbl-status').textContent='';
-
-  fetch(FEATURE_URL+'/query?'+new URLSearchParams({
-    where:'1=1', outFields:'*', f:'json', token:TOKEN, resultRecordCount:2000
-  }))
-  .then(function(r){ return r.json(); })
+  fetch(FEATURE_URL+'/query?'+new URLSearchParams({where:'1=1',outFields:'*',f:'json',token:TOKEN,resultRecordCount:2000}))
+  .then(function(r){return r.json();})
   .then(function(res){
     if(res.error) throw new Error(res.error.message);
-    todosRegistros = (res.features||[]).map(function(f){ return f.attributes; });
-    var todos = todosRegistros.length ? Object.keys(todosRegistros[0]) : [];
-    var prio  = COL_PRIO.filter(function(c){ return todos.includes(c); });
-    var resto = todos.filter(function(c){ return !COL_PRIO.includes(c) && !c.startsWith('Shape') && c!=='GlobalID'; });
-    camposVisiveis = prio.concat(resto).slice(0,12);
-    renderHead();
-    filtrar();
+    todos=(res.features||[]).map(function(f){return f.attributes;});
+    var all=todos.length?Object.keys(todos[0]):[];
+    var p=PRIO.filter(function(c){return all.includes(c);});
+    var r=all.filter(function(c){return!PRIO.includes(c)&&!c.startsWith('Shape')&&c!=='GlobalID';});
+    cols=p.concat(r).slice(0,12);
+    renderHead(); filtrar();
     document.getElementById('lbl-status').textContent='Atualizado: '+new Date().toLocaleTimeString('pt-BR');
   })
   .catch(function(e){
-    body.innerHTML='<tr><td colspan="20" class="empty">Erro: '+e.message+'</td></tr>';
+    document.getElementById('tb').innerHTML='<tr><td colspan="20" class="empty">Erro: '+e.message+'</td></tr>';
     toast(e.message,'fail');
   });
 }
 
 function renderHead(){
-  var tr='<tr>';
-  camposVisiveis.forEach(function(c){ tr+='<th>'+c+'</th>'; });
-  tr+='<th style="width:90px">Ação</th></tr>';
-  document.getElementById('tbl-head').innerHTML=tr;
+  var h='<tr>';
+  cols.forEach(function(c){h+='<th>'+c+'</th>';});
+  h+='<th style="width:90px">Ação</th></tr>';
+  document.getElementById('th').innerHTML=h;
 }
 
 function filtrar(){
-  var q = document.getElementById('inp-search').value.toLowerCase().trim();
-  var filtrados = q
-    ? todosRegistros.filter(function(r){
-        return Object.values(r).some(function(v){ return v!=null && String(v).toLowerCase().includes(q); });
-      })
-    : todosRegistros;
-  document.getElementById('lbl-count').textContent=filtrados.length+' registro'+(filtrados.length!==1?'s':'');
-  renderRows(filtrados);
+  var q=document.getElementById('inp-search').value.toLowerCase().trim();
+  var f=q?todos.filter(function(r){
+    return Object.values(r).some(function(v){return v!=null&&String(v).toLowerCase().includes(q);});
+  }):todos;
+  document.getElementById('lbl-count').textContent=f.length+' registro'+(f.length!==1?'s':'');
+  renderRows(f);
 }
 
 function renderRows(rows){
-  var body=document.getElementById('tbl-body');
-  if(!rows.length){ body.innerHTML='<tr><td colspan="20" class="empty">Nenhum registro encontrado</td></tr>'; return; }
-  var html='';
+  if(!rows.length){document.getElementById('tb').innerHTML='<tr><td colspan="20" class="empty">Nenhum registro encontrado</td></tr>';return;}
+  var h='';
   rows.forEach(function(r){
-    var oid=r.OBJECTID||r.objectid||r.ObjectID||'';
-    html+='<tr>';
-    camposVisiveis.forEach(function(c){
+    var oid=r.OBJECTID||r.objectid||'';
+    h+='<tr>';
+    cols.forEach(function(c){
       var v=r[c]; if(v==null)v='';
-      if(typeof v==='number'&&v>1e12){ try{v=new Date(v).toLocaleDateString('pt-BR');}catch(e){} }
-      html+='<td title="'+String(v).replace(/"/g,'&quot;')+'">'+esc(String(v))+'</td>';
+      if(typeof v==='number'&&v>1e12){try{v=new Date(v).toLocaleDateString('pt-BR');}catch(e){}}
+      h+='<td title="'+String(v).replace(/"/g,'')+'">'+esc(String(v))+'</td>';
     });
-    html+='<td><button class="btn btn-dl btn-sm" onclick="baixarFicha('+oid+',this)">Baixar</button></td>';
-    html+='</tr>';
+    h+='<td><button class="btn-dl" onclick="baixar('+oid+',this)">Baixar</button></td></tr>';
   });
-  body.innerHTML=html;
+  document.getElementById('tb').innerHTML=h;
 }
 
-function esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
-// ── Download da ficha ─────────────────────────────────────────────────────────
-function baixarFicha(oid,btn){
+function baixar(oid,btn){
   if(!oid){toast('OBJECTID não encontrado','fail');return;}
-  btn.disabled=true; btn.textContent='…';
+  btn.disabled=true;btn.textContent='…';
   Promise.all([
-    fetch(FEATURE_URL+'/query?'+new URLSearchParams({objectIds:oid,outFields:'*',f:'json',token:TOKEN,returnGeometry:'true'})).then(function(r){return r.json();}),
+    fetch(FEATURE_URL+'/query?'+new URLSearchParams({objectIds:oid,outFields:'*',f:'json',token:TOKEN})).then(function(r){return r.json();}),
     fetch(FEATURE_URL+'/'+oid+'/attachments?'+new URLSearchParams({f:'json',token:TOKEN})).then(function(r){return r.json();})
   ])
   .then(function(res){
     if(res[0].error) throw new Error(res[0].error.message);
     var dados=(res[0].features[0]||{}).attributes||{};
-    var anexos=(res[1].attachmentInfos||[]).filter(function(a){ return /\.(jpg|jpeg|png|gif|webp|bmp)$/i.test(a.name); });
-    return gerarDocx(dados,anexos,oid);
+    var anx=(res[1].attachmentInfos||[]).filter(function(a){return /\.(jpg|jpeg|png|gif|webp|bmp)$/i.test(a.name);});
+    return gerarDocx(dados,anx,oid);
   })
   .then(function(blob){
     var a=document.createElement('a');
     a.href=URL.createObjectURL(blob);
-    a.download='ficha_cadastro_oid'+oid+'_'+new Date().toISOString().slice(0,10)+'.docx';
+    a.download='ficha_oid'+oid+'_'+new Date().toISOString().slice(0,10)+'.docx';
     a.click();
     toast('Ficha OID '+oid+' baixada!','ok');
   })
@@ -313,64 +279,52 @@ function baixarFicha(oid,btn){
   .finally(function(){btn.disabled=false;btn.textContent='Baixar';});
 }
 
-// ── Geração do DOCX ───────────────────────────────────────────────────────────
-function fmtVal(v,f){
+function fv(v){
   if(v==null)return'';
-  if(typeof v==='number'&&v>1e12){
-    try{ var d=new Date(v); return('0'+d.getDate()).slice(-2)+'/'+(('0'+(d.getMonth()+1)).slice(-2))+'/'+d.getFullYear(); }catch(e){return String(v);}
-  }
+  if(typeof v==='number'&&v>1e12){try{var d=new Date(v);return('0'+d.getDate()).slice(-2)+'/'+(('0'+(d.getMonth()+1)).slice(-2))+'/'+d.getFullYear();}catch(e){return String(v);}}
   return String(v);
 }
-function fmtChk(dados,campo,opcao){
-  var sels=String(dados[campo]||'').split(/[,;]/).map(function(s){return s.trim();});
-  return sels.includes(opcao.trim())?'☑':'☐';
+function fc(dados,campo,opcao){
+  return String(dados[campo]||'').split(/[,;]/).map(function(s){return s.trim();}).includes(opcao.trim())?'☑':'☐';
 }
-function procTexto(txt,dados){
-  txt=txt.replace(/\$\{(\w+)\s*[│|]\s*checked:"([^"]+)"\}/g,function(_,c,o){return fmtChk(dados,c,o);});
-  txt=txt.replace(/\$\{(\w+)\s*[│|]\s*format:"([^"]+)"\}/g,function(_,c,f){return fmtVal(dados[c],f);});
+function pt(txt,dados){
+  txt=txt.replace(/\$\{(\w+)\s*[│|]\s*checked:"([^"]+)"\}/g,function(_,c,o){return fc(dados,c,o);});
+  txt=txt.replace(/\$\{(\w+)\s*[│|]\s*format:"([^"]+)"\}/g,function(_,c){return fv(dados[c]);});
   txt=txt.replace(/\$\{if\s+(\w+)\s*[│|]\s*selected:"([^"]+)"\}([\s\S]*?)\$\{\/\}/g,function(_,c,o,inner){
-    return String(dados[c]||'').toLowerCase()===o.toLowerCase()?procTexto(inner,dados):'';
+    return String(dados[c]||'').toLowerCase()===o.toLowerCase()?pt(inner,dados):'';
   });
   txt=txt.replace(/\$\{\$file[^}]*\}/g,'[FOTO]');
-  txt=txt.replace(/\$\{(\w+)\}/g,function(_,c){return fmtVal(dados[c]);});
+  txt=txt.replace(/\$\{(\w+)\}/g,function(_,c){return fv(dados[c]);});
   txt=txt.replace(/\$\{[^}]*\}/g,'');
   return txt;
 }
-function substXml(xml,dados){
+function sx(xml,dados){
   return xml.replace(/(<w:t[^>]*>)([\s\S]*?)(<\/w:t>)/g,function(_,o,c,cl){
-    return c.includes('$')?o+procTexto(c,dados)+cl:_;
+    return c.includes('$')?o+pt(c,dados)+cl:_;
   });
 }
-async function gerarDocx(dados,anexosInfo,oid){
+async function gerarDocx(dados,anx,oid){
   var fotos=[];
-  for(var i=0;i<anexosInfo.length;i++){
-    try{
-      var r=await fetch(FEATURE_URL+'/'+oid+'/attachments/'+anexosInfo[i].id+'?token='+TOKEN);
-      fotos.push({nome:anexosInfo[i].name,buf:await r.arrayBuffer()});
-    }catch(e){}
+  for(var i=0;i<anx.length;i++){
+    try{var r=await fetch(FEATURE_URL+'/'+oid+'/attachments/'+anx[i].id+'?token='+TOKEN);fotos.push({nome:anx[i].name,buf:await r.arrayBuffer()});}catch(e){}
   }
   var JSZip=(await import('https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js')).default;
   var mr=await fetch('FICHA_DE_CADASTRO.docx');
-  if(!mr.ok)throw new Error('Modelo não encontrado');
+  if(!mr.ok)throw new Error('Modelo FICHA_DE_CADASTRO.docx não encontrado');
   var zip=await JSZip.loadAsync(await mr.arrayBuffer());
-  var docXml=await zip.file('word/document.xml').async('string');
-  docXml=substXml(docXml,dados);
+  var doc=await zip.file('word/document.xml').async('string');
+  doc=sx(doc,dados);
   if(fotos.length){
-    var fXml=await mkFotosXml(fotos,zip);
-    if(docXml.includes('[FOTO]')) docXml=docXml.replace('[FOTO]',fXml);
-    else docXml=docXml.replace('</w:body>',fXml+'</w:body>');
+    var fx=await mkFotos(fotos,zip);
+    doc=doc.includes('[FOTO]')?doc.replace('[FOTO]',fx):doc.replace('</w:body>',fx+'</w:body>');
   }
-  zip.file('word/document.xml',docXml);
-  var files=Object.keys(zip.files);
-  for(var i=0;i<files.length;i++){
-    var n=files[i];
-    if(/^word\/(header|footer)\d*\.xml$/.test(n)){
-      zip.file(n,substXml(await zip.file(n).async('string'),dados));
-    }
+  zip.file('word/document.xml',doc);
+  for(var n of Object.keys(zip.files)){
+    if(/^word\/(header|footer)\d*\.xml$/.test(n)) zip.file(n,sx(await zip.file(n).async('string'),dados));
   }
   return zip.generateAsync({type:'blob',mimeType:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'});
 }
-async function mkFotosXml(fotos,zip){
+async function mkFotos(fotos,zip){
   var rels=await zip.file('word/_rels/document.xml.rels').async('string');
   var ct=await zip.file('[Content_Types].xml').async('string');
   var xml='<w:p><w:pPr><w:pStyle w:val="Heading2"/></w:pPr><w:r><w:t>Registros Fotogr\u00e1ficos</w:t></w:r></w:p>';
@@ -378,7 +332,7 @@ async function mkFotosXml(fotos,zip){
     var f=fotos[i],ext=f.nome.split('.').pop().toLowerCase(),rId='rIdF'+i;
     zip.file('word/media/foto'+i+'.'+ext,f.buf);
     rels=rels.replace('</Relationships>','<Relationship Id="'+rId+'" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/foto'+i+'.'+ext+'"/></Relationships>');
-    if(!ct.includes('Extension="'+ext+'"')) ct=ct.replace('</Types>','<Default Extension="'+ext+'" ContentType="image/'+(ext==='jpg'?'jpeg':ext)+'"/></Types>');
+    if(!ct.includes('Extension="'+ext+'"'))ct=ct.replace('</Types>','<Default Extension="'+ext+'" ContentType="image/'+(ext==='jpg'?'jpeg':ext)+'"/></Types>');
     xml+='<w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:drawing><wp:inline xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"><wp:extent cx="4572000" cy="3429000"/><wp:docPr id="'+(100+i)+'" name="f'+i+'"/><a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="'+(100+i)+'" name="f'+i+'"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="'+rId+'" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="4572000" cy="3429000"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r></w:p>';
   }
   zip.file('word/_rels/document.xml.rels',rels);
@@ -387,10 +341,11 @@ async function mkFotosXml(fotos,zip){
 }
 function toast(msg,tipo){
   var w=document.getElementById('toasts'),el=document.createElement('div');
-  el.className='toast'+(tipo?' '+tipo:''); el.textContent=msg; w.appendChild(el);
+  el.className='toast'+(tipo?' '+tipo:'');el.textContent=msg;w.appendChild(el);
   requestAnimationFrame(function(){requestAnimationFrame(function(){el.classList.add('show');});});
   setTimeout(function(){el.classList.remove('show');setTimeout(function(){el.remove();},300);},3500);
 }
+document.getElementById('inp-pass').addEventListener('keydown',function(e){if(e.key==='Enter')doLogin();});
 </script>
 </body>
 </html>
