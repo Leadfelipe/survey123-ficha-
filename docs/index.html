@@ -147,8 +147,7 @@ tr:hover td{background:#fafaf8}
       </div>
       <span class="badge" id="lbl-count">— registros</span>
       <select id="sel-modelo" style="padding:5px 10px;border:0.5px solid var(--border);border-radius:var(--radius);font-size:13px;background:#fff;color:#1a1a18;cursor:pointer;font-family:inherit;outline:none">
-        <option value="FICHA_DE_CADASTRO.docx">Ficha de Cadastro</option>
-        <option value="01_Cadastro_Socioeconomico.docx">Cadastro Socioeconômico</option>
+        <option value="">Carregando modelos…</option>
       </select>
       <button class="btn-sm" onclick="carregarDados()">↺ Atualizar</button>
     </div>
@@ -246,9 +245,58 @@ function tentarToken(endpoint,user,pass){
   });
 }
 
+async function carregarModelos(){
+  var sel = document.getElementById('sel-modelo');
+  sel.innerHTML = '';
+  
+  // Tenta carregar lista de modelos de models.json
+  // Se não existir, tenta os arquivos .docx conhecidos e descobre quais existem
+  var modelos = [];
+  
+  try {
+    var r = await fetch('models.json?t='+Date.now());
+    if(r.ok){
+      modelos = await r.json();
+    }
+  } catch(e){}
+  
+  // Se não tem models.json, tenta fazer probe de arquivos .docx na pasta
+  if(!modelos.length){
+    // Lista de candidatos — adicione aqui novos nomes se quiser
+    var candidatos = [
+      'FICHA_DE_CADASTRO.docx',
+      '01_Cadastro_Socioeconomico.docx',
+      '02_Cadastro_Fundiario.docx'
+    ];
+    // Testa quais existem com HEAD request
+    var checks = candidatos.map(function(arq){
+      return fetch(arq, {method:'HEAD'})
+        .then(function(r){ return r.ok ? arq : null; })
+        .catch(function(){ return null; });
+    });
+    var resultados = await Promise.all(checks);
+    resultados.forEach(function(arq){
+      if(arq) modelos.push({arquivo: arq, nome: arq.replace('.docx','').replace(/_/g,' ')});
+    });
+  }
+  
+  if(!modelos.length){
+    sel.innerHTML = '<option value="">Nenhum modelo encontrado</option>';
+    return;
+  }
+  
+  modelos.forEach(function(m, i){
+    var opt = document.createElement('option');
+    opt.value = typeof m === 'string' ? m : m.arquivo;
+    opt.textContent = typeof m === 'string' ? m.replace('.docx','').replace(/_/g,' ') : m.nome;
+    sel.appendChild(opt);
+  });
+}
+
 function entrar(){
   document.getElementById('login-screen').style.display='none';
   document.getElementById('app-screen').style.display='flex';
+  carregarModelos();
   carregarDados();
 }
 
