@@ -343,7 +343,11 @@ function fv(v){
   return String(v);
 }
 function fc(dados,campo,opcao){
-  return String(dados[campo]||'').split(/[,;]/).map(function(s){return s.trim();}).includes(opcao.trim())?'☑':'☐';
+  var marcado = String(dados[campo]||'').split(/[,;]/).map(function(s){return s.trim();}).includes(opcao.trim());
+  // Retorna XML do Word com fonte Wingdings para checkbox correto
+  // Em Wingdings: ü (252) = ✔caixa marcada, o (111) = caixa vazia
+  var runCheck = '<w:r><w:rPr><w:rFonts w:ascii="Wingdings" w:hAnsi="Wingdings" w:cs="Wingdings"/><w:sz w:val="20"/></w:rPr><w:t>'+(marcado?'\u00fc':'\u006f')+'</w:t></w:r>';
+  return '</w:t></w:r>'+runCheck+'<w:r><w:rPr/><w:t xml:space="preserve">';
 }
 function pt(txt,dados){
   txt=txt.replace(/\$\{(\w+)\s*[│|]\s*checked:"([^"]+)"\}/g,function(_,c,o){return fc(dados,c,o);});
@@ -368,8 +372,13 @@ function sx(xml,dados){
   }
   // 2. Agora substitui os marcadores dentro de <w:t>
   return unido.replace(/(<w:t[^>]*>)([\s\S]*?)(<\/w:t>)/g,function(_,o,c,cl){
-    if(!c.includes('$') && !c.includes('☑') && !c.includes('☐')) return _;
-    return o+pt(c,dados)+cl;
+    if(!c.includes('$')) return _;
+    var resultado = pt(c,dados);
+    // Se o resultado contém XML de runs (checkboxes Wingdings), injeta diretamente
+    if(resultado.includes('<w:r>')){
+      return o + resultado + cl;
+    }
+    return o+resultado+cl;
   });
 }
 async function gerarDocx(dados,anx,oid){
