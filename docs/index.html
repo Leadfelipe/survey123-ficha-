@@ -358,17 +358,103 @@ function renderRows(rows){
 
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
+// ── Busca tabelas relacionadas via parentglobalid ────────────────────────────
+async function buscarTabelasRelacionadas(globalId) {
+  // Descobre a URL base do FeatureServer (remove o índice /0 ou /1 etc.)
+  var baseUrl = FEATURE_URL.replace(/\/\d+$/, '');
+
+  // 1. Consulta o FeatureServer para saber quantas tabelas/layers existem
+  var infoRes = await fetch(baseUrl + '?f=json&token=' + TOKEN).then(function(r){return r.json();}).catch(function(){return {};});
+  var camadas = (infoRes.layers || []).concat(infoRes.tables || []);
+
+  // Filtra: pega todos exceto o layer principal (índice 0 geralmente)
+  var indiceAtual = parseInt(FEATURE_URL.match(/\/(\d+)$/)[1], 10);
+  var relacionadas = camadas.filter(function(c){ return c.id !== indiceAtual; });
+
+  if(!relacionadas.length) return {};
+
+  // 2. Para cada tabela relacionada, busca registros onde parentglobalid = globalId
+  var dadosExtras = {};
+  var gidEscapado = globalId.replace(/'/g, "''");
+
+  var promises = relacionadas.map(function(tab) {
+    var tabUrl = baseUrl + '/' + tab.id;
+    var params = new URLSearchParams({
+      where: "parentglobalid='" + gidEscapado + "'",
+      outFields: '*',
+      f: 'json',
+      token: TOKEN,
+      resultRecordCount: 100
+    });
+    return fetch(tabUrl + '/query?' + params)
+      .then(function(r){ return r.json(); })
+      .then(function(res) {
+        if(res.error || !res.features || !res.features.length) return;
+        res.features.forEach(function(feat, idx) {
+          var attrs = feat.attributes || {};
+          Object.keys(attrs).forEach(function(k) {
+            // Campos que já existem no pai: prefixo com nome da tabela
+            var chave = k;
+            if(dadosExtras.hasOwnProperty(k)) {
+              // Se já existe, usa tab_NOMECAMPO ou tab_IDX_NOMECAMPO para múltiplos registros
+              chave = (tab.name || 'tab' + tab.id) + '_' + k;
+            }
+            // Para múltiplos registros na mesma tabela, adiciona índice
+            if(res.features.length > 1) {
+              chave = (tab.name || 'tab' + tab.id) + '_' + (idx + 1) + '_' + k;
+            }
+            dadosExtras[chave] = attrs[k];
+          });
+        });
+        // Também expõe o primeiro registro diretamente sem prefixo (conveniência)
+        if(res.features.length >= 1) {
+          var primeiros = res.features[0].attributes || {};
+          Object.keys(primeiros).forEach(function(k) {
+            if(!dadosExtras.hasOwnProperty(k)) {
+              dadosExtras[k] = primeiros[k];
+            }
+          });
+        }
+      })
+      .catch(function(){});
+  });
+
+  await Promise.all(promises);
+  return dadosExtras;
+}
+
 function baixar(oid,btn){
   if(!oid){toast('OBJECTID não encontrado','fail');return;}
   btn.disabled=true;btn.textContent='…';
+
+  // Busca dados do registro principal + anexos em paralelo
   Promise.all([
-    fetch(FEATURE_URL+'/query?'+new URLSearchParams({objectIds:oid,outFields:'*',f:'json',token:TOKEN})).then(function(r){return r.json();}),
+    fetch(FEATURE_URL+'/query?'+new URLSearchParams({objectIds:oid,outFields:'*',f:'json',token:TOKEN,returnGeometry:'false'})).then(function(r){return r.json();}),
     fetch(FEATURE_URL+'/'+oid+'/attachments?'+new URLSearchParams({f:'json',token:TOKEN})).then(function(r){return r.json();})
   ])
-  .then(function(res){
+  .then(async function(res){
     if(res[0].error) throw new Error(res[0].error.message);
     var dados=(res[0].features[0]||{}).attributes||{};
     var anx=(res[1].attachmentInfos||[]).filter(function(a){return /\.(jpg|jpeg|png|gif|webp|bmp)$/i.test(a.name);});
+
+    // Busca tabelas relacionadas usando GlobalID do registro pai
+    var globalId = dados.GlobalID || dados.globalid || dados.globalId || '';
+    if(globalId) {
+      try {
+        btn.textContent = '…tabelas';
+        var extras = await buscarTabelasRelacionadas(globalId);
+        // Mescla: campos das tabelas relacionadas só preenchem se não existirem no pai
+        Object.keys(extras).forEach(function(k){
+          if(!dados.hasOwnProperty(k) || dados[k] === null || dados[k] === '') {
+            dados[k] = extras[k];
+          }
+        });
+      } catch(e) {
+        console.warn('Tabelas relacionadas falhou:', e);
+      }
+      btn.textContent = '…';
+    }
+
     return gerarDocx(dados,anx,oid);
   })
   .then(function(blob){
