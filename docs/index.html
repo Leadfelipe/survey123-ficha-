@@ -557,8 +557,16 @@ async function gerarDocx(dados,anx,oid,repeatsData){
   if(typeof JSZip==='undefined') throw new Error('JSZip não carregou, recarregue a página.');
   var modeloSel = document.getElementById('sel-modelo');
   var modeloArq = modeloSel ? modeloSel.value : 'FICHA_DE_CADASTRO.docx';
-  var mr=await fetch(modeloArq);
-  if(!mr.ok)throw new Error('Modelo '+modeloArq+' não encontrado na pasta docs/');
+  if(!modeloArq) throw new Error('Nenhum modelo DOCX selecionado.');
+
+  // Corrige caminho para GitHub Pages (repo não é raiz)
+  var basePath = location.pathname.replace(/\/[^\/]*$/, '');
+  var caminhoDoc = basePath + '/docs/' + modeloArq;
+  var mr = await fetch(caminhoDoc);
+  if(!mr.ok){
+    mr = await fetch(modeloArq);
+  }
+  if(!mr.ok) throw new Error('Modelo ' + modeloArq + ' não encontrado. Coloque o arquivo na pasta docs/ do GitHub Pages.');
   var zip=await JSZip.loadAsync(await mr.arrayBuffer());
   var doc=await zip.file('word/document.xml').async('string');
   doc=sx(doc,dados,repeatsData);
