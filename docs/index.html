@@ -449,6 +449,7 @@ function baixar(oid,btn){
             dados[k] = extras[k];
           }
         });
+        dados._related = extras;
       } catch(e) {
         console.warn('Tabelas relacionadas falhou:', e);
       }
@@ -495,29 +496,52 @@ function fv(v){
 }
 
 function getCampo(dados, campo){
-  if(Object.prototype.hasOwnProperty.call(dados, campo)) return dados[campo];
-
+  if(Object.prototype.hasOwnProperty.call(dados || {}, campo)) return dados[campo];
   var alvo = norm(campo);
   var chaves = Object.keys(dados || {});
   for(var i = 0; i < chaves.length; i++){
-    if(norm(chaves[i]) === alvo){
-      return dados[chaves[i]];
-    }
+    if(norm(chaves[i]) === alvo) return dados[chaves[i]];
   }
   return '';
 }
 
+function splitMultiValue(v){
+  return String(v || '')
+    .split(/[,;|]/)
+    .map(function(s){ return s.trim(); })
+    .filter(Boolean);
+}
+
 function fc(dados, campo, opcao){
   var bruto = getCampo(dados, campo);
-  var valores = String(bruto || '')
-    .split(/[,;|]/)
-    .map(function(s){ return norm(s); })
-    .filter(Boolean);
-
+  var valores = splitMultiValue(bruto).map(norm);
   return valores.includes(norm(opcao)) ? '☑' : '☐';
 }
 
-function normalizarPlaceholdersQuebrados(txt){
+function getValueToken(dados, campo, fallback){
+  var v = getCampo(dados, campo);
+  if(v == null || v === '') return fallback != null ? fallback : '';
+  return fv(v);
+}
+
+function selectedAt(dados, campo, idx){
+  var vals = splitMultiValue(getCampo(dados, campo));
+  idx = parseInt(idx, 10);
+  if(isNaN(idx) || idx < 0 || idx >= vals.length) return '';
+  return vals[idx];
+}
+
+function countSelected(dados, campo){
+  return String(splitMultiValue(getCampo(dados, campo)).length);
+}
+
+function bulletsValue(dados, campo){
+  var vals = splitMultiValue(getCampo(dados, campo));
+  if(!vals.length) return '';
+  return vals.map(function(v){ return '• ' + v; }).join('\n');
+}
+
+function normalizePlaceholderText(txt){
   return txt.replace(/\$\{[\s\S]*?\}/g, function(m){
     return m
       .replace(/\r?\n/g, ' ')
@@ -531,52 +555,95 @@ function normalizarPlaceholdersQuebrados(txt){
   });
 }
 
+function renderParamToken(expr, dados){
+  var m;
+
+  m = expr.match(/^([A-Za-z0-9_\-]+)\s*[│|]\s*checked\s*:\s*"([^"]+)"$/i);
+  if(m) return fc(dados, m[1], m[2]);
+
+  m = expr.match(/^([A-Za-z0-9_\-]+)\s*[│|]\s*format\s*:\s*"([^"]+)"$/i);
+  if(m) return fv(getCampo(dados, m[1]));
+
+  m = expr.match(/^([A-Za-z0-9_\-]+)\s*[│|]\s*appearance\s*:\s*"multiline"$/i);
+  if(m) return getValueToken(dados, m[1], '');
+
+  m = expr.match(/^([A-Za-z0-9_\-]+)\s*[│|]\s*appearance\s*:\s*"bullets"$/i);
+  if(m) return bulletsValue(dados, m[1]);
+
+  m = expr.match(/^([A-Za-z0-9_\-]+)\s*[│|]\s*getValue\s*:\s*"([^"]*)"$/i);
+  if(m) return getValueToken(dados, m[1], m[2]);
+
+  m = expr.match(/^([A-Za-z0-9_\-]+)\s*[│|]\s*selectedAt\s*:\s*([0-9]+)$/i);
+  if(m) return selectedAt(dados, m[1], m[2]);
+
+  m = expr.match(/^([A-Za-z0-9_\-]+)\s*[│|]\s*countSelected$/i);
+  if(m) return countSelected(dados, m[1]);
+
+  m = expr.match(/^([A-Za-z0-9_\-]+)$/);
+  if(m) return fv(getCampo(dados, m[1]));
+
+  return '';
+}
+
+function renderRepeats(txt, dados){
+  return txt.replace(/\$\{\s*#([A-Za-z0-9_\-]+)\s*\}([\s\S]*?)\$\{\/\}/g, function(_, rep, inner){
+    var v = getCampo(dados, rep);
+    if(Array.isArray(v)){
+      return v.map(function(item){
+        var row = (item && typeof item === 'object' && item.attributes) ? item.attributes : (item || {});
+        return pt(inner, row);
+      }).join('');
+    }
+    if(v && typeof v === 'object'){
+      return pt(inner, v.attributes || v);
+    }
+    if(String(v || '').trim()){
+      return pt(inner, dados);
+    }
+    return '';
+  });
+}
+
 function pt(txt, dados){
-  txt = normalizarPlaceholdersQuebrados(txt);
+  txt = normalizePlaceholderText(txt);
 
-  txt = txt.replace(/\$\{\s*([A-Za-z0-9_\-]+)\s*[│|]\s*checked\s*:\s*"([^"]+)"\s*\}/g, function(_, c, o){
-    return fc(dados, c, o);
+  txt = renderRepeats(txt, dados);
+
+  txt = txt.replace(/\$\{\s*if\s+([A-Za-z0-9_\-]+)\s*[│|]\s*selected\s*:\s*"([^"]+)"\s*\}([\s\S]*?)\$\{\/\}/gi, function(_, c, o, inner){
+    var vals = splitMultiValue(getCampo(dados, c)).map(norm);
+    return vals.includes(norm(o)) ? pt(inner, dados) : '';
   });
 
-  txt = txt.replace(/\$\{\s*([A-Za-z0-9_\-]+)\s*[│|]\s*format\s*:\s*"([^"]+)"\s*\}/g, function(_, c){
-    return fv(getCampo(dados, c));
+  txt = txt.replace(/\$\{\s*\$file(?:\s*[│|]\s*getValue\s*:\s*"([^"]*)")?(?:\s*[│|]\s*size\s*:\s*([0-9]+)\s*:\s*([0-9]+))?[^}]*\}/gi, function(_, fallback){
+    return '[FOTO]';
   });
 
-  txt = txt.replace(/\$\{\s*if\s+([A-Za-z0-9_\-]+)\s*[│|]\s*selected\s*:\s*"([^"]+)"\s*\}([\s\S]*?)\$\{\/\}/g, function(_, c, o, inner){
-    return norm(getCampo(dados, c)) === norm(o) ? pt(inner, dados) : '';
+  txt = txt.replace(/\$\{([^{}]+)\}/g, function(_, expr){
+    return renderParamToken(expr.trim(), dados);
   });
 
-  txt = txt.replace(/\$\{\s*\$file[^}]*\}/g, '[FOTO]');
-
-  txt = txt.replace(/\$\{\s*([A-Za-z0-9_\-]+)\s*\}/g, function(_, c){
-    return fv(getCampo(dados, c));
-  });
-
-  txt = txt.replace(/\$\{[^}]*\}/g, '');
   return txt;
 }
 function sx(xml,dados){
   var unido = xml;
 
-  for(var iter = 0; iter < 20; iter++){
+  for(var iter = 0; iter < 30; iter++){
     var antes = unido;
-
     unido = unido.replace(
       /<\/w:t>\s*<\/w:r>\s*<w:r[^>]*>\s*(?:<w:rPr>[\s\S]*?<\/w:rPr>)?\s*<w:t[^>]*>/g,
       ''
     );
-
     if(unido === antes) break;
   }
 
-  var processado = unido.replace(/(<w:t[^>]*>)([\s\S]*?)(<\/w:t>)/g,function(_,o,c,cl){
+  var processado = unido.replace(/(<w:t[^>]*>)([\s\S]*?)(<\/w:t>)/g, function(_, o, c, cl){
     if(!c.includes('$')) return _;
     return o + pt(c, dados) + cl;
   });
 
   processado = processado.replace(
     /(<w:rPr>)([\s\S]*?)(<\/w:rPr>)(<w:t[^>]*>)([^<]*[\u2610\u2611][^<]*)(<\/w:t><\/w:r>)/g,
-    function(_,ro,rc,rcl,to,tc,tcl){
+    function(_, ro, rc, rcl, to, tc, tcl){
       var nf = '<w:rFonts w:ascii="Segoe UI Symbol" w:hAnsi="Segoe UI Symbol" w:cs="Segoe UI Symbol"/>';
       return ro + nf + rc.replace(/<w:rFonts[^/]*\/>/g,'') + rcl + to + tc + tcl;
     }
