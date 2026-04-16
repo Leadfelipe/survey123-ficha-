@@ -449,7 +449,6 @@ function baixar(oid,btn){
             dados[k] = extras[k];
           }
         });
-        dados._related = extras;
       } catch(e) {
         console.warn('Tabelas relacionadas falhou:', e);
       }
@@ -481,7 +480,7 @@ function norm(s){
 }
 
 function fv(v){
-  if(v == null) return '';
+  if(v == null || v === '') return '';
   if(typeof v === 'number' && v > 1e12){
     try{
       var d = new Date(v);
@@ -555,36 +554,6 @@ function normalizePlaceholderText(txt){
   });
 }
 
-function renderParamToken(expr, dados){
-  var m;
-
-  m = expr.match(/^([A-Za-z0-9_\-]+)\s*[│|]\s*checked\s*:\s*"([^"]+)"$/i);
-  if(m) return fc(dados, m[1], m[2]);
-
-  m = expr.match(/^([A-Za-z0-9_\-]+)\s*[│|]\s*format\s*:\s*"([^"]+)"$/i);
-  if(m) return fv(getCampo(dados, m[1]));
-
-  m = expr.match(/^([A-Za-z0-9_\-]+)\s*[│|]\s*appearance\s*:\s*"multiline"$/i);
-  if(m) return getValueToken(dados, m[1], '');
-
-  m = expr.match(/^([A-Za-z0-9_\-]+)\s*[│|]\s*appearance\s*:\s*"bullets"$/i);
-  if(m) return bulletsValue(dados, m[1]);
-
-  m = expr.match(/^([A-Za-z0-9_\-]+)\s*[│|]\s*getValue\s*:\s*"([^"]*)"$/i);
-  if(m) return getValueToken(dados, m[1], m[2]);
-
-  m = expr.match(/^([A-Za-z0-9_\-]+)\s*[│|]\s*selectedAt\s*:\s*([0-9]+)$/i);
-  if(m) return selectedAt(dados, m[1], m[2]);
-
-  m = expr.match(/^([A-Za-z0-9_\-]+)\s*[│|]\s*countSelected$/i);
-  if(m) return countSelected(dados, m[1]);
-
-  m = expr.match(/^([A-Za-z0-9_\-]+)$/);
-  if(m) return fv(getCampo(dados, m[1]));
-
-  return '';
-}
-
 function renderRepeats(txt, dados){
   return txt.replace(/\$\{\s*#([A-Za-z0-9_\-]+)\s*\}([\s\S]*?)\$\{\/\}/g, function(_, rep, inner){
     var v = getCampo(dados, rep);
@@ -594,19 +563,21 @@ function renderRepeats(txt, dados){
         return pt(inner, row);
       }).join('');
     }
-    if(v && typeof v === 'object'){
-      return pt(inner, v.attributes || v);
-    }
-    if(String(v || '').trim()){
-      return pt(inner, dados);
-    }
+    if(v && typeof v === 'object') return pt(inner, v.attributes || v);
+    if(String(v || '').trim()) return pt(inner, dados);
     return '';
   });
 }
 
+function blankIfOnlyLabel(line){
+  return line
+    .replace(/\s+/g, ' ')
+    .replace(/\s+([:;,.?])/g, '$1')
+    .trimEnd();
+}
+
 function pt(txt, dados){
   txt = normalizePlaceholderText(txt);
-
   txt = renderRepeats(txt, dados);
 
   txt = txt.replace(/\$\{\s*if\s+([A-Za-z0-9_\-]+)\s*[│|]\s*selected\s*:\s*"([^"]+)"\s*\}([\s\S]*?)\$\{\/\}/gi, function(_, c, o, inner){
@@ -614,14 +585,34 @@ function pt(txt, dados){
     return vals.includes(norm(o)) ? pt(inner, dados) : '';
   });
 
-  txt = txt.replace(/\$\{\s*\$file(?:\s*[│|]\s*getValue\s*:\s*"([^"]*)")?(?:\s*[│|]\s*size\s*:\s*([0-9]+)\s*:\s*([0-9]+))?[^}]*\}/gi, function(_, fallback){
-    return '[FOTO]';
-  });
+  txt = txt.replace(/\$\{\s*\$file(?:\s*[│|]\s*getValue\s*:\s*"([^"]*)")?(?:\s*[│|]\s*size\s*:\s*([0-9]+)\s*:\s*([0-9]+))?[^}]*\}/gi, '[FOTO]');
 
   txt = txt.replace(/\$\{([^{}]+)\}/g, function(_, expr){
-    return renderParamToken(expr.trim(), dados);
+    expr = expr.trim();
+    var m;
+    m = expr.match(/^([A-Za-z0-9_\-]+)\s*[│|]\s*checked\s*:\s*"([^"]+)"$/i);
+    if(m) return fc(dados, m[1], m[2]);
+    m = expr.match(/^([A-Za-z0-9_\-]+)\s*[│|]\s*format\s*:\s*"([^"]+)"$/i);
+    if(m) return fv(getCampo(dados, m[1]));
+    m = expr.match(/^([A-Za-z0-9_\-]+)\s*[│|]\s*appearance\s*:\s*"multiline"$/i);
+    if(m) return getValueToken(dados, m[1], '');
+    m = expr.match(/^([A-Za-z0-9_\-]+)\s*[│|]\s*appearance\s*:\s*"bullets"$/i);
+    if(m) return bulletsValue(dados, m[1]);
+    m = expr.match(/^([A-Za-z0-9_\-]+)\s*[│|]\s*getValue\s*:\s*"([^"]*)"$/i);
+    if(m) return getValueToken(dados, m[1], m[2]);
+    m = expr.match(/^([A-Za-z0-9_\-]+)\s*[│|]\s*selectedAt\s*:\s*([0-9]+)$/i);
+    if(m) return selectedAt(dados, m[1], m[2]);
+    m = expr.match(/^([A-Za-z0-9_\-]+)\s*[│|]\s*countSelected$/i);
+    if(m) return countSelected(dados, m[1]);
+    m = expr.match(/^([A-Za-z0-9_\-]+)$/);
+    if(m) return fv(getCampo(dados, m[1]));
+    return '';
   });
 
+  txt = txt.replace(/\$\{[^}]*\}/g, '');
+  txt = txt.split(/\n/).map(blankIfOnlyLabel).join('\n');
+  txt = txt.replace(/[ \t]{2,}/g, ' ');
+  txt = txt.replace(/\n{3,}/g, '\n\n');
   return txt;
 }
 function sx(xml,dados){
@@ -629,21 +620,17 @@ function sx(xml,dados){
 
   for(var iter = 0; iter < 30; iter++){
     var antes = unido;
-    unido = unido.replace(
-      /<\/w:t>\s*<\/w:r>\s*<w:r[^>]*>\s*(?:<w:rPr>[\s\S]*?<\/w:rPr>)?\s*<w:t[^>]*>/g,
-      ''
-    );
+    unido = unido.replace(/<\/w:t>\s*<\/w:r>\s*<w:r[^>]*>\s*(?:<w:rPr>[\s\S]*?<\/w:rPr>)?\s*<w:t[^>]*>/g, '');
     if(unido === antes) break;
   }
 
-  var processado = unido.replace(/(<w:t[^>]*>)([\s\S]*?)(<\/w:t>)/g, function(_, o, c, cl){
+  var processado = unido.replace(/(<w:t[^>]*>)([\s\S]*?)(<\/w:t>)/g,function(_,o,c,cl){
     if(!c.includes('$')) return _;
     return o + pt(c, dados) + cl;
   });
 
-  processado = processado.replace(
-    /(<w:rPr>)([\s\S]*?)(<\/w:rPr>)(<w:t[^>]*>)([^<]*[\u2610\u2611][^<]*)(<\/w:t><\/w:r>)/g,
-    function(_, ro, rc, rcl, to, tc, tcl){
+  processado = processado.replace(/(<w:rPr>)([\s\S]*?)(<\/w:rPr>)(<w:t[^>]*>)([^<]*[\u2610\u2611][^<]*)(<\/w:t><\/w:r>)/g,
+    function(_,ro,rc,rcl,to,tc,tcl){
       var nf = '<w:rFonts w:ascii="Segoe UI Symbol" w:hAnsi="Segoe UI Symbol" w:cs="Segoe UI Symbol"/>';
       return ro + nf + rc.replace(/<w:rFonts[^/]*\/>/g,'') + rcl + to + tc + tcl;
     }
