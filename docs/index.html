@@ -344,10 +344,7 @@ function fv(v){
 }
 function fc(dados,campo,opcao){
   var marcado = String(dados[campo]||'').split(/[,;]/).map(function(s){return s.trim();}).includes(opcao.trim());
-  // Retorna XML do Word com fonte Wingdings para checkbox correto
-  // Em Wingdings: ü (252) = ✔caixa marcada, o (111) = caixa vazia
-  var runCheck = '<w:r><w:rPr><w:rFonts w:ascii="Wingdings" w:hAnsi="Wingdings" w:cs="Wingdings"/><w:sz w:val="20"/></w:rPr><w:t>'+(marcado?'\u00fc':'\u006f')+'</w:t></w:r>';
-  return '</w:t></w:r>'+runCheck+'<w:r><w:rPr/><w:t xml:space="preserve">';
+  return marcado ? '☑' : '☐';
 }
 function pt(txt,dados){
   txt=txt.replace(/\$\{(\w+)\s*[│|]\s*checked:"([^"]+)"\}/g,function(_,c,o){return fc(dados,c,o);});
@@ -371,15 +368,21 @@ function sx(xml,dados){
     unido = unido.replace(/<\/w:t>(<\/w:r><w:r>(?:<w:rPr>[\s\S]*?<\/w:rPr>)?)<w:t[^>]*>/g, '');
   }
   // 2. Agora substitui os marcadores dentro de <w:t>
-  return unido.replace(/(<w:t[^>]*>)([\s\S]*?)(<\/w:t>)/g,function(_,o,c,cl){
+  // Substitui marcadores dentro de <w:t>
+  var processado = unido.replace(/(<w:t[^>]*>)([\s\S]*?)(<\/w:t>)/g,function(_,o,c,cl){
     if(!c.includes('$')) return _;
-    var resultado = pt(c,dados);
-    // Se o resultado contém XML de runs (checkboxes Wingdings), injeta diretamente
-    if(resultado.includes('<w:r>')){
-      return o + resultado + cl;
-    }
-    return o+resultado+cl;
+    return o+pt(c,dados)+cl;
   });
+  // Pós-processa: runs que contêm ☑ ou ☐ recebem fonte "Segoe UI Symbol"
+  // que renderiza corretamente esses caracteres Unicode no Word
+  processado = processado.replace(
+    /(<w:rPr>)([\s\S]*?)(<\/w:rPr>)(<w:t[^>]*>)([^<]*[\u2610\u2611][^<]*)(<\/w:t><\/w:r>)/g,
+    function(_,ro,rc,rcl,to,tc,tcl){
+      var nf='<w:rFonts w:ascii="Segoe UI Symbol" w:hAnsi="Segoe UI Symbol" w:cs="Segoe UI Symbol"/>'
+      return ro+nf+rc.replace(/<w:rFonts[^/]*\/>/g,'')+rcl+to+tc+tcl;
+    }
+  );
+  return processado;
 }
 async function gerarDocx(dados,anx,oid){
   var fotos=[];
