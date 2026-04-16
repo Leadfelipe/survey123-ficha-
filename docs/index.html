@@ -146,6 +146,10 @@ tr:hover td{background:#fafaf8}
         <input type="text" id="inp-search" placeholder="Buscar em qualquer campo…" oninput="filtrar()">
       </div>
       <span class="badge" id="lbl-count">— registros</span>
+      <select id="sel-modelo" style="padding:5px 10px;border:0.5px solid var(--border);border-radius:var(--radius);font-size:13px;background:#fff;color:#1a1a18;cursor:pointer;font-family:inherit;outline:none">
+        <option value="FICHA_DE_CADASTRO.docx">Ficha de Cadastro</option>
+        <option value="01_Cadastro_Socioeconomico.docx">Cadastro Socioeconômico</option>
+      </select>
       <button class="btn-sm" onclick="carregarDados()">↺ Atualizar</button>
     </div>
     <div class="status" id="lbl-status"></div>
@@ -329,7 +333,9 @@ function baixar(oid,btn){
   .then(function(blob){
     var a=document.createElement('a');
     a.href=URL.createObjectURL(blob);
-    a.download='ficha_oid'+oid+'_'+new Date().toISOString().slice(0,10)+'.docx';
+    var modeloSel2 = document.getElementById('sel-modelo');
+    var prefixo = modeloSel2 ? modeloSel2.value.replace('.docx','') : 'ficha';
+    a.download=prefixo+'_oid'+oid+'_'+new Date().toISOString().slice(0,10)+'.docx';
     a.click();
     toast('Ficha OID '+oid+' baixada!','ok');
   })
@@ -391,8 +397,10 @@ async function gerarDocx(dados,anx,oid){
   }
   if(typeof JSZip==='undefined') throw new Error('JSZip não carregou, recarregue a página.');
   var JSZipLib=JSZip;
-  var mr=await fetch('FICHA_DE_CADASTRO.docx');
-  if(!mr.ok)throw new Error('Modelo FICHA_DE_CADASTRO.docx não encontrado');
+  var modeloSel = document.getElementById('sel-modelo');
+  var modeloArq = modeloSel ? modeloSel.value : 'FICHA_DE_CADASTRO.docx';
+  var mr=await fetch(modeloArq);
+  if(!mr.ok)throw new Error('Modelo '+modeloArq+' não encontrado na pasta docs/');
   var zip=await JSZipLib.loadAsync(await mr.arrayBuffer());
   var doc=await zip.file('word/document.xml').async('string');
   doc=sx(doc,dados);
