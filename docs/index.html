@@ -478,6 +478,7 @@ function norm(s){
     .trim()
     .toLowerCase();
 }
+
 function fv(v){
   if(v == null) return '';
   if(typeof v === 'number' && v > 1e12){
@@ -492,6 +493,7 @@ function fv(v){
   }
   return String(v);
 }
+
 function getCampo(dados, campo){
   if(Object.prototype.hasOwnProperty.call(dados, campo)) return dados[campo];
 
@@ -504,6 +506,7 @@ function getCampo(dados, campo){
   }
   return '';
 }
+
 function fc(dados, campo, opcao){
   var bruto = getCampo(dados, campo);
   var valores = String(bruto || '')
@@ -513,7 +516,24 @@ function fc(dados, campo, opcao){
 
   return valores.includes(norm(opcao)) ? '☑' : '☐';
 }
+
+function normalizarPlaceholdersQuebrados(txt){
+  return txt.replace(/\$\{[\s\S]*?\}/g, function(m){
+    return m
+      .replace(/\r?\n/g, ' ')
+      .replace(/\s+/g, ' ')
+      .replace(/\$\{\s+/, '${')
+      .replace(/\s+\}/, '}')
+      .replace(/\|\s*/g, ' | ')
+      .replace(/\s*:\s*/g, ':')
+      .replace(/\s+"/g, '"')
+      .trim();
+  });
+}
+
 function pt(txt, dados){
+  txt = normalizarPlaceholdersQuebrados(txt);
+
   txt = txt.replace(/\$\{\s*([A-Za-z0-9_\-]+)\s*[│|]\s*checked\s*:\s*"([^"]+)"\s*\}/g, function(_, c, o){
     return fc(dados, c, o);
   });
@@ -536,30 +556,32 @@ function pt(txt, dados){
   return txt;
 }
 function sx(xml,dados){
-  // 1. Une runs adjacentes para remontar marcadores fragmentados pelo Word
-  // Remove quebras entre </w:t></w:r><w:r><w:rPr>...</w:rPr><w:t> 
-  // e entre </w:t></w:r><w:r><w:t> (runs sem rPr)
   var unido = xml;
-  // Itera até não haver mais fragmentações
-  for(var iter=0;iter<5;iter++){
-    // Une runs com mesmo estilo: </w:t></w:r><w:r><w:rPr>MESMO</w:rPr><w:t
-    unido = unido.replace(/<\/w:t>(<\/w:r><w:r>(?:<w:rPr>[\s\S]*?<\/w:rPr>)?)<w:t[^>]*>/g, '');
+
+  for(var iter = 0; iter < 20; iter++){
+    var antes = unido;
+
+    unido = unido.replace(
+      /<\/w:t>\s*<\/w:r>\s*<w:r[^>]*>\s*(?:<w:rPr>[\s\S]*?<\/w:rPr>)?\s*<w:t[^>]*>/g,
+      ''
+    );
+
+    if(unido === antes) break;
   }
-  // 2. Agora substitui os marcadores dentro de <w:t>
-  // Substitui marcadores dentro de <w:t>
+
   var processado = unido.replace(/(<w:t[^>]*>)([\s\S]*?)(<\/w:t>)/g,function(_,o,c,cl){
     if(!c.includes('$')) return _;
-    return o+pt(c,dados)+cl;
+    return o + pt(c, dados) + cl;
   });
-  // Pós-processa: runs que contêm ☑ ou ☐ recebem fonte "Segoe UI Symbol"
-  // que renderiza corretamente esses caracteres Unicode no Word
+
   processado = processado.replace(
     /(<w:rPr>)([\s\S]*?)(<\/w:rPr>)(<w:t[^>]*>)([^<]*[\u2610\u2611][^<]*)(<\/w:t><\/w:r>)/g,
     function(_,ro,rc,rcl,to,tc,tcl){
-      var nf='<w:rFonts w:ascii="Segoe UI Symbol" w:hAnsi="Segoe UI Symbol" w:cs="Segoe UI Symbol"/>'
-      return ro+nf+rc.replace(/<w:rFonts[^/]*\/>/g,'')+rcl+to+tc+tcl;
+      var nf = '<w:rFonts w:ascii="Segoe UI Symbol" w:hAnsi="Segoe UI Symbol" w:cs="Segoe UI Symbol"/>';
+      return ro + nf + rc.replace(/<w:rFonts[^/]*\/>/g,'') + rcl + to + tc + tcl;
     }
   );
+
   return processado;
 }
 async function gerarDocx(dados,anx,oid){
