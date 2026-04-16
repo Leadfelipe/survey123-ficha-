@@ -470,24 +470,69 @@ function baixar(oid,btn){
   .finally(function(){btn.disabled=false;btn.textContent='Baixar';});
 }
 
+function norm(s){
+  return String(s || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase();
+}
 function fv(v){
-  if(v==null)return'';
-  if(typeof v==='number'&&v>1e12){try{var d=new Date(v);return('0'+d.getDate()).slice(-2)+'/'+(('0'+(d.getMonth()+1)).slice(-2))+'/'+d.getFullYear();}catch(e){return String(v);}}
+  if(v == null) return '';
+  if(typeof v === 'number' && v > 1e12){
+    try{
+      var d = new Date(v);
+      return ('0' + d.getDate()).slice(-2) + '/' +
+             ('0' + (d.getMonth() + 1)).slice(-2) + '/' +
+             d.getFullYear();
+    }catch(e){
+      return String(v);
+    }
+  }
   return String(v);
 }
-function fc(dados,campo,opcao){
-  var marcado = String(dados[campo]||'').split(/[,;]/).map(function(s){return s.trim();}).includes(opcao.trim());
-  return marcado ? '☑' : '☐';
+function getCampo(dados, campo){
+  if(Object.prototype.hasOwnProperty.call(dados, campo)) return dados[campo];
+
+  var alvo = norm(campo);
+  var chaves = Object.keys(dados || {});
+  for(var i = 0; i < chaves.length; i++){
+    if(norm(chaves[i]) === alvo){
+      return dados[chaves[i]];
+    }
+  }
+  return '';
 }
-function pt(txt,dados){
-  txt=txt.replace(/\$\{(\w+)\s*[│|]\s*checked:"([^"]+)"\}/g,function(_,c,o){return fc(dados,c,o);});
-  txt=txt.replace(/\$\{(\w+)\s*[│|]\s*format:"([^"]+)"\}/g,function(_,c){return fv(dados[c]);});
-  txt=txt.replace(/\$\{if\s+(\w+)\s*[│|]\s*selected:"([^"]+)"\}([\s\S]*?)\$\{\/\}/g,function(_,c,o,inner){
-    return String(dados[c]||'').toLowerCase()===o.toLowerCase()?pt(inner,dados):'';
+function fc(dados, campo, opcao){
+  var bruto = getCampo(dados, campo);
+  var valores = String(bruto || '')
+    .split(/[,;|]/)
+    .map(function(s){ return norm(s); })
+    .filter(Boolean);
+
+  return valores.includes(norm(opcao)) ? '☑' : '☐';
+}
+function pt(txt, dados){
+  txt = txt.replace(/\$\{\s*([A-Za-z0-9_\-]+)\s*[│|]\s*checked\s*:\s*"([^"]+)"\s*\}/g, function(_, c, o){
+    return fc(dados, c, o);
   });
-  txt=txt.replace(/\$\{\$file[^}]*\}/g,'[FOTO]');
-  txt=txt.replace(/\$\{(\w+)\}/g,function(_,c){return fv(dados[c]);});
-  txt=txt.replace(/\$\{[^}]*\}/g,'');
+
+  txt = txt.replace(/\$\{\s*([A-Za-z0-9_\-]+)\s*[│|]\s*format\s*:\s*"([^"]+)"\s*\}/g, function(_, c){
+    return fv(getCampo(dados, c));
+  });
+
+  txt = txt.replace(/\$\{\s*if\s+([A-Za-z0-9_\-]+)\s*[│|]\s*selected\s*:\s*"([^"]+)"\s*\}([\s\S]*?)\$\{\/\}/g, function(_, c, o, inner){
+    return norm(getCampo(dados, c)) === norm(o) ? pt(inner, dados) : '';
+  });
+
+  txt = txt.replace(/\$\{\s*\$file[^}]*\}/g, '[FOTO]');
+
+  txt = txt.replace(/\$\{\s*([A-Za-z0-9_\-]+)\s*\}/g, function(_, c){
+    return fv(getCampo(dados, c));
+  });
+
+  txt = txt.replace(/\$\{[^}]*\}/g, '');
   return txt;
 }
 function sx(xml,dados){
