@@ -359,68 +359,66 @@ function renderRows(rows){
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
 // ── Busca tabelas relacionadas via parentglobalid ────────────────────────────
+// Retorna um objeto onde cada chave é o nome normalizado da tabela/layer
+// e o valor é um ARRAY de objetos de atributos (para suportar ${#tabela}...${/})
 async function buscarTabelasRelacionadas(globalId) {
-  // Descobre a URL base do FeatureServer (remove o índice /0 ou /1 etc.)
   var baseUrl = FEATURE_URL.replace(/\/\d+$/, '');
 
-  // 1. Consulta o FeatureServer para saber quantas tabelas/layers existem
-  var infoRes = await fetch(baseUrl + '?f=json&token=' + TOKEN).then(function(r){return r.json();}).catch(function(){return {};});
-  var camadas = (infoRes.layers || []).concat(infoRes.tables || []);
+  // 1. Descobre layers e tables do FeatureServer
+  var infoRes = await fetch(baseUrl + '?f=json&token=' + TOKEN)
+    .then(function(r){ return r.json(); })
+    .catch(function(){ return {}; });
 
-  // Filtra: pega todos exceto o layer principal (índice 0 geralmente)
-  var indiceAtual = parseInt(FEATURE_URL.match(/\/(\d+)$/)[1], 10);
+  var camadas = (infoRes.layers || []).concat(infoRes.tables || []);
+  var indiceAtual = parseInt((FEATURE_URL.match(/\/(\d+)$/) || [0,'0'])[1], 10);
   var relacionadas = camadas.filter(function(c){ return c.id !== indiceAtual; });
 
   if(!relacionadas.length) return {};
 
-  // 2. Para cada tabela relacionada, busca registros onde parentglobalid = globalId
-  var dadosExtras = {};
+  var resultado = {};
   var gidEscapado = globalId.replace(/'/g, "''");
 
   var promises = relacionadas.map(function(tab) {
     var tabUrl = baseUrl + '/' + tab.id;
+    var nomeLimpo = (tab.name || ('tab' + tab.id))
+      .replace(/^survey123_[a-f0-9]+_results_/i, '')  // remove prefixo ArcGIS
+      .replace(/\s+/g, '_')
+      .toLowerCase();
+
     var params = new URLSearchParams({
       where: "parentglobalid='" + gidEscapado + "'",
       outFields: '*',
       f: 'json',
       token: TOKEN,
-      resultRecordCount: 100
+      resultRecordCount: 200
     });
+
     return fetch(tabUrl + '/query?' + params)
       .then(function(r){ return r.json(); })
       .then(function(res) {
         if(res.error || !res.features || !res.features.length) return;
-        res.features.forEach(function(feat, idx) {
-          var attrs = feat.attributes || {};
-          Object.keys(attrs).forEach(function(k) {
-            // Campos que já existem no pai: prefixo com nome da tabela
-            var chave = k;
-            if(dadosExtras.hasOwnProperty(k)) {
-              // Se já existe, usa tab_NOMECAMPO ou tab_IDX_NOMECAMPO para múltiplos registros
-              chave = (tab.name || 'tab' + tab.id) + '_' + k;
-            }
-            // Para múltiplos registros na mesma tabela, adiciona índice
-            if(res.features.length > 1) {
-              chave = (tab.name || 'tab' + tab.id) + '_' + (idx + 1) + '_' + k;
-            }
-            dadosExtras[chave] = attrs[k];
-          });
+
+        var registros = res.features.map(function(f){ return f.attributes || {}; });
+
+        // Expõe como array com o nome completo da tabela
+        resultado[nomeLimpo] = registros;
+
+        // Também com o nome original (sem normalização) como fallback
+        resultado[tab.name] = registros;
+
+        // Expõe o primeiro registro também com campos soltos (conveniência para templates simples)
+        var primeiro = registros[0];
+        Object.keys(primeiro).forEach(function(k){
+          if(!resultado.hasOwnProperty(k)) {
+            resultado[k] = primeiro[k];
+          }
         });
-        // Também expõe o primeiro registro diretamente sem prefixo (conveniência)
-        if(res.features.length >= 1) {
-          var primeiros = res.features[0].attributes || {};
-          Object.keys(primeiros).forEach(function(k) {
-            if(!dadosExtras.hasOwnProperty(k)) {
-              dadosExtras[k] = primeiros[k];
-            }
-          });
-        }
       })
-      .catch(function(){});
+      .catch(function(e){ console.warn('Tabela ' + nomeLimpo + ' falhou:', e); });
   });
 
   await Promise.all(promises);
-  return dadosExtras;
+  return resultado;
 }
 
 function baixar(oid,btn){
@@ -487,9 +485,7 @@ function fv(v){
       return ('0' + d.getDate()).slice(-2) + '/' +
              ('0' + (d.getMonth() + 1)).slice(-2) + '/' +
              d.getFullYear();
-    }catch(e){
-      return String(v);
-    }
+    }catch(e){ return String(v); }
   }
   return String(v);
 }
@@ -514,7 +510,7 @@ function splitMultiValue(v){
 function fc(dados, campo, opcao){
   var bruto = getCampo(dados, campo);
   var valores = splitMultiValue(bruto).map(norm);
-  return valores.includes(norm(opcao)) ? '☑' : '☐';
+  return valores.includes(norm(opcao)) ? '\u2611' : '\u2610';
 }
 
 function getValueToken(dados, campo, fallback){
@@ -537,7 +533,7 @@ function countSelected(dados, campo){
 function bulletsValue(dados, campo){
   var vals = splitMultiValue(getCampo(dados, campo));
   if(!vals.length) return '';
-  return vals.map(function(v){ return '• ' + v; }).join('\n');
+  return vals.map(function(v){ return '\u2022 ' + v; }).join('\n');
 }
 
 function normalizePlaceholderText(txt){
@@ -572,7 +568,7 @@ function renderRepeats(txt, dados){
 function blankIfOnlyLabel(line){
   return line
     .replace(/\s+/g, ' ')
-    .replace(/\s+([:;,.?])/g, '$1')
+    .replace(/\s+([\:;,\.\?])/g, '$1')
     .trimEnd();
 }
 
@@ -615,27 +611,32 @@ function pt(txt, dados){
   txt = txt.replace(/\n{3,}/g, '\n\n');
   return txt;
 }
+
 function sx(xml,dados){
+  // 1. Une runs adjacentes para remontar marcadores fragmentados pelo Word
+  // Remove quebras entre </w:t></w:r><w:r><w:rPr>...</w:rPr><w:t> 
+  // e entre </w:t></w:r><w:r><w:t> (runs sem rPr)
   var unido = xml;
-
-  for(var iter = 0; iter < 30; iter++){
-    var antes = unido;
-    unido = unido.replace(/<\/w:t>\s*<\/w:r>\s*<w:r[^>]*>\s*(?:<w:rPr>[\s\S]*?<\/w:rPr>)?\s*<w:t[^>]*>/g, '');
-    if(unido === antes) break;
+  // Itera até não haver mais fragmentações
+  for(var iter=0;iter<5;iter++){
+    // Une runs com mesmo estilo: </w:t></w:r><w:r><w:rPr>MESMO</w:rPr><w:t
+    unido = unido.replace(/<\/w:t>(<\/w:r><w:r>(?:<w:rPr>[\s\S]*?<\/w:rPr>)?)<w:t[^>]*>/g, '');
   }
-
+  // 2. Agora substitui os marcadores dentro de <w:t>
+  // Substitui marcadores dentro de <w:t>
   var processado = unido.replace(/(<w:t[^>]*>)([\s\S]*?)(<\/w:t>)/g,function(_,o,c,cl){
     if(!c.includes('$')) return _;
-    return o + pt(c, dados) + cl;
+    return o+pt(c,dados)+cl;
   });
-
-  processado = processado.replace(/(<w:rPr>)([\s\S]*?)(<\/w:rPr>)(<w:t[^>]*>)([^<]*[\u2610\u2611][^<]*)(<\/w:t><\/w:r>)/g,
+  // Pós-processa: runs que contêm ☑ ou ☐ recebem fonte "Segoe UI Symbol"
+  // que renderiza corretamente esses caracteres Unicode no Word
+  processado = processado.replace(
+    /(<w:rPr>)([\s\S]*?)(<\/w:rPr>)(<w:t[^>]*>)([^<]*[\u2610\u2611][^<]*)(<\/w:t><\/w:r>)/g,
     function(_,ro,rc,rcl,to,tc,tcl){
-      var nf = '<w:rFonts w:ascii="Segoe UI Symbol" w:hAnsi="Segoe UI Symbol" w:cs="Segoe UI Symbol"/>';
-      return ro + nf + rc.replace(/<w:rFonts[^/]*\/>/g,'') + rcl + to + tc + tcl;
+      var nf='<w:rFonts w:ascii="Segoe UI Symbol" w:hAnsi="Segoe UI Symbol" w:cs="Segoe UI Symbol"/>'
+      return ro+nf+rc.replace(/<w:rFonts[^/]*\/>/g,'')+rcl+to+tc+tcl;
     }
   );
-
   return processado;
 }
 async function gerarDocx(dados,anx,oid){
